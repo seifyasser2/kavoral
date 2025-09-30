@@ -3,7 +3,9 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import { Notification, ErrorMessage } from './components/common';
-
+import FAQPage from './pages/FAQPage';
+import PoliciesPage from './pages/PoliciesPage';
+import WhatsAppWidget from './components/common/WhatsAppWidget';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -90,19 +92,21 @@ import WishlistPage from './pages/WishlistPage';
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
-  const renderPage = () => {
-    switch (state.currentPage) {
-      case 'home': return <HomePage />;
-      case 'products': return <ProductsPage />;
-      case 'offers': return <OffersPage />;
-      case 'about': return <AboutPage />;
-      case 'contact': return <ContactPage />;
-      case 'cart': return <CartPage />;
-      case 'wishlist': return <WishlistPage />;
-      case 'product-details': return <ProductDetailsPage />;
-      default: return <HomePage />;
-    }
-  };
+const renderPage = () => {
+  switch (state.currentPage) {
+    case 'home': return <HomePage />;
+    case 'products': return <ProductsPage />;
+    case 'offers': return <OffersPage />;
+    case 'about': return <AboutPage />;
+    case 'contact': return <ContactPage />;
+    case 'cart': return <CartPage />;
+    case 'wishlist': return <WishlistPage />;
+    case 'product-details': return <ProductDetailsPage />;
+    case 'faq': return <FAQPage />;           // ✅ جديد
+    case 'policies': return <PoliciesPage />; // ✅ جديد
+    default: return <HomePage />;
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50" 
@@ -178,6 +182,69 @@ const AppContent = () => {
           background: #15803d;
         }
       `}</style>
+
+      {/* Custom Styles - Mobile Optimized */}
+      <style jsx global>{`
+        /* Prevent horizontal scroll on mobile */
+        html, body {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
+        
+        * {
+          box-sizing: border-box;
+        }
+        
+        /* Smooth animations */
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+        
+        /* Smooth scrolling */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: #16a34a;
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: #15803d;
+        }
+        
+        /* Mobile touch optimization */
+        @media (max-width: 768px) {
+          button, a {
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          input, textarea {
+            font-size: 16px; /* Prevent zoom on focus */
+          }
+        }
+      `}</style>
     </div>
   );
 };
@@ -185,9 +252,11 @@ const AppContent = () => {
 // Main App Component
 const App = () => {
   return (
+    
     <AppProvider>
       <AppContent />
     </AppProvider>
+    
   );
 };
 

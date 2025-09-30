@@ -46,7 +46,7 @@ const HomePage = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Truck size={20} />
-                  <span>توصيل مجاني</span>
+                  <span>توصيل مجاني +300ج</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Award size={20} />
@@ -55,22 +55,27 @@ const HomePage = () => {
               </div>
             </div>
             
-            <div className="text-center relative">
-              {/* Logo with Animation */}
-              <div className="relative w-64 h-64 mx-auto">
-                <div className="absolute inset-0 bg-green-500 rounded-full opacity-20 animate-ping"></div>
-                <div className="absolute inset-0 bg-white rounded-full opacity-10 animate-pulse"></div>
+            <div className="text-center relative overflow-hidden">
+              {/* Logo with Simple Animation - Mobile Friendly */}
+              <div className="relative w-48 h-48 md:w-64 md:h-64 mx-auto">
+                {/* Background circles - Hidden on mobile */}
+                <div className="hidden md:block absolute inset-0 bg-green-500 rounded-full opacity-20 animate-ping"></div>
+                <div className="hidden md:block absolute inset-0 bg-white rounded-full opacity-10 animate-pulse"></div>
+                
+                {/* Logo */}
                 <div className="relative z-10 w-full h-full flex items-center justify-center">
                   <img 
                     src="/logo.png" 
                     alt="Kavoral Logo"
-                    className="w-48 h-48 object-contain animate-bounce-slow"
+                    className="w-32 h-32 md:w-48 md:h-48 object-contain"
+                    style={{ animation: 'gentle-float 4s ease-in-out infinite' }}
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
                     }}
                   />
-                  <div className="hidden w-48 h-48 items-center justify-center text-9xl animate-bounce-slow">
+                  <div className="hidden w-32 h-32 md:w-48 md:h-48 items-center justify-center text-8xl md:text-9xl"
+                       style={{ animation: 'gentle-float 4s ease-in-out infinite' }}>
                     🌿
                   </div>
                 </div>
@@ -133,19 +138,20 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Custom Animations */}
+      {/* Custom Animations - Mobile Optimized */}
       <style jsx>{`
-        @keyframes bounce-slow {
+        @keyframes gentle-float {
           0%, 100% {
             transform: translateY(0);
           }
           50% {
-            transform: translateY(-20px);
+            transform: translateY(-10px);
           }
         }
         
-        .animate-bounce-slow {
-          animation: bounce-slow 3s ease-in-out infinite;
+        /* Prevent horizontal scroll on mobile */
+        body {
+          overflow-x: hidden;
         }
       `}</style>
     </div>
