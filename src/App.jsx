@@ -178,6 +178,70 @@ const AppContent = () => {
           background: #15803d;
         }
       `}</style>
+
+
+        {/* Custom Styles - Mobile Optimized */}
+      <style jsx global>{`
+        /* Prevent horizontal scroll on mobile */
+        html, body {
+          overflow-x: hidden;
+          max-width: 100vw;
+        }
+        
+        * {
+          box-sizing: border-box;
+        }
+        
+        /* Smooth animations */
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+        
+        /* Smooth scrolling */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: #16a34a;
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: #15803d;
+        }
+        
+        /* Mobile touch optimization */
+        @media (max-width: 768px) {
+          button, a {
+            -webkit-tap-highlight-color: transparent;
+          }
+          
+          input, textarea {
+            font-size: 16px; /* Prevent zoom on focus */
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -141,24 +141,24 @@ const CartPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {state.cart.map(item => (
-              <div key={item.id} className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center text-4xl flex-shrink-0">
+              <div key={item.id} className="bg-white p-4 md:p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center text-3xl sm:text-4xl flex-shrink-0 mx-auto sm:mx-0">
                     {item.image}
                   </div>
                   
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">
+                  <div className="flex-1 text-center sm:text-right">
+                    <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1">
                       {item.name}
-                      {item.isBundle && <Badge variant="warning" className="mr-2">عرض خاص</Badge>}
+                      {item.isBundle && <Badge variant="warning" className="mr-2 text-xs">عرض خاص</Badge>}
                     </h3>
-                    <p className="text-sm text-gray-500 mb-2">{item.size}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 mb-2">{item.size}</p>
                     
-                    {/* ✅ عرض المنتجات في العرض */}
+                    {/* عرض المنتجات في العرض */}
                     {item.isBundle && item.bundleProducts && (
                       <div className="mt-2 mb-2">
                         <p className="text-xs text-gray-600 font-semibold mb-1">يحتوي على:</p>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 justify-center sm:justify-start">
                           {item.bundleProducts.map(productId => {
                             const product = PRODUCTS_DATA.find(p => p.id === productId);
                             return product ? (
@@ -171,49 +171,52 @@ const CartPage = () => {
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg font-bold text-green-600">{item.price} جنيه</span>
+                    <div className="flex items-center gap-2 mb-3 justify-center sm:justify-start flex-wrap">
+                      <span className="text-base sm:text-lg font-bold text-green-600">{item.price} جنيه</span>
                       {item.originalPrice > item.price && (
-                        <span className="text-sm text-gray-400 line-through">{item.originalPrice} جنيه</span>
+                        <span className="text-xs sm:text-sm text-gray-400 line-through">{item.originalPrice} جنيه</span>
                       )}
                       {item.tags && item.tags[0] && (
-                        <Badge variant="info">{item.tags[0]}</Badge>
+                        <Badge variant="info" className="text-xs">{item.tags[0]}</Badge>
                       )}
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-end gap-3">
-                    <button
-                      onClick={() => removeFromCart(item.id, item.name)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
-                      aria-label="حذف من السلة"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                    
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                      >
-                        <Minus size={14} />
-                      </button>
-                      <span className="w-12 text-center font-bold">{item.quantity}</span>
-                      <button
-                        onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                      >
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                    
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-gray-800">
-                        {item.price * item.quantity} جنيه
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {item.quantity} × {item.price}
-                      </p>
+
+                    {/* Quantity and Delete - Mobile Optimized */}
+                    <div className="flex items-center justify-between sm:justify-start gap-4 mt-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
+                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="w-10 text-center font-bold">{item.quantity}</span>
+                        <button
+                          onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
+                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="text-center sm:text-right">
+                          <p className="text-base sm:text-lg font-bold text-gray-800">
+                            {item.price * item.quantity} جنيه
+                          </p>
+                          <p className="text-xs sm:text-sm text-gray-500">
+                            {item.quantity} × {item.price}
+                          </p>
+                        </div>
+                        
+                        <button
+                          onClick={() => removeFromCart(item.id, item.name)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
+                          aria-label="حذف من السلة"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -221,17 +224,17 @@ const CartPage = () => {
             ))}
           </div>
 
-          {/* Order Summary */}
-          <div className="bg-white p-6 rounded-xl shadow-lg h-fit sticky top-24">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">ملخص الطلب</h2>
+          {/* Order Summary - Mobile Optimized */}
+          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg h-fit lg:sticky lg:top-24">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">ملخص الطلب</h2>
             
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between text-lg">
+            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
+              <div className="flex justify-between text-base md:text-lg">
                 <span>المجموع الفرعي:</span>
                 <span className="font-bold">{total} جنيه</span>
               </div>
               
-              <div className="flex justify-between">
+              <div className="flex justify-between text-sm md:text-base">
                 <span>الشحن:</span>
                 <span className="font-bold">
                   {shipping === 0 ? (
@@ -246,9 +249,9 @@ const CartPage = () => {
               </div>
               
               {total < SITE_CONFIG.shipping.freeShippingThreshold && (
-                <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    <Gift className="inline w-4 h-4 mr-1" />
+                <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 rounded-lg">
+                  <p className="text-xs md:text-sm text-yellow-800">
+                    <Gift className="inline w-3 h-3 md:w-4 md:h-4 mr-1" />
                     أضف {SITE_CONFIG.shipping.freeShippingThreshold - total} جنيه أخرى للحصول على شحن مجاني
                   </p>
                 </div>
@@ -256,7 +259,7 @@ const CartPage = () => {
               
               <hr className="border-gray-200" />
               
-              <div className="flex justify-between text-xl font-bold text-green-600">
+              <div className="flex justify-between text-lg md:text-xl font-bold text-green-600">
                 <span>الإجمالي:</span>
                 <span>{finalTotal} جنيه</span>
               </div>
@@ -265,15 +268,15 @@ const CartPage = () => {
             {!isCheckout ? (
               <button
                 onClick={() => setIsCheckout(true)}
-                className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-green-600 text-white py-3 md:py-3 rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
               >
-                <ShoppingCart size={20} />
+                <ShoppingCart size={18} />
                 إتمام الطلب
               </button>
             ) : (
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <User size={20} />
+              <div className="space-y-3 md:space-y-4">
+                <h3 className="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <User size={18} />
                   بيانات التوصيل
                 </h3>
                 
@@ -285,7 +288,7 @@ const CartPage = () => {
                     type: 'UPDATE_CUSTOMER_INFO', 
                     payload: { name: e.target.value } 
                   })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
                   required
                 />
                 
@@ -297,7 +300,7 @@ const CartPage = () => {
                     type: 'UPDATE_CUSTOMER_INFO', 
                     payload: { phone: e.target.value } 
                   })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
                   required
                 />
                 
@@ -309,7 +312,7 @@ const CartPage = () => {
                     payload: { address: e.target.value } 
                   })}
                   rows="3"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm md:text-base"
                   required
                 />
                 
@@ -317,32 +320,32 @@ const CartPage = () => {
                   <button
                     onClick={() => setIsCheckout(false)}
                     disabled={isSubmitting}
-                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-gray-200 text-gray-700 py-2 md:py-3 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 text-sm md:text-base"
                   >
                     إلغاء
                   </button>
                   <button
                     onClick={handleCheckout}
                     disabled={isSubmitting}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-colors font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-1 bg-green-600 text-white py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors font-bold disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
                   >
                     {isSubmitting ? (
                       <>
-                        <LoadingSpinner size={20} />
+                        <LoadingSpinner size={18} />
                         جاري الإرسال...
                       </>
                     ) : (
                       <>
-                        <Send size={20} />
+                        <Send size={18} />
                         تأكيد الطلب
                       </>
                     )}
                   </button>
                 </div>
                 
-                <div className="bg-blue-50 p-3 rounded-lg">
+                <div className="bg-blue-50 p-2 md:p-3 rounded-lg">
                   <p className="text-xs text-blue-800 text-center flex items-center justify-center gap-1">
-                    <MessageCircle size={14} />
+                    <MessageCircle size={12} />
                     سيتم توجيهك لواتساب لإتمام الطلب
                   </p>
                 </div>
