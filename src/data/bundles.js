@@ -1,7 +1,10 @@
+import { getProductById } from './products';
+
 // ============================================
 // دالة لحساب السعر بعد الخصم تلقائياً
 // ============================================
 const calculateBundlePrice = (originalPrice, discountPercentage) => {
+  if (!originalPrice || discountPercentage < 0) return originalPrice;
   return Math.round(originalPrice * (1 - discountPercentage / 100));
 };
 
@@ -9,13 +12,14 @@ const calculateBundlePrice = (originalPrice, discountPercentage) => {
 // دالة لحساب المبلغ الموفر
 // ============================================
 const calculateSavings = (originalPrice, discountPercentage) => {
+  if (!originalPrice || discountPercentage <= 0) return 0;
   return Math.round(originalPrice * (discountPercentage / 100));
 };
 
 // ============================================
 // الخصم العام للعروض - غيره هنا يتطبق على كل العروض
 // ============================================
-export const GLOBAL_BUNDLE_DISCOUNT = 0; // غير الرقم ده للخصم على كل العروض
+export const GLOBAL_BUNDLE_DISCOUNT = 50; // غير الرقم ده للخصم على كل العروض
 
 // ============================================
 // بيانات العروض الخام
@@ -25,10 +29,11 @@ const bundlesRawData = [
     id: 'hair-care-bundle',
     name: 'باقة العناية بالشعر الكاملة',
     description: 'مجموعة متكاملة من 3 زيوت طبيعية للعناية الشاملة بالشعر',
-    image: '💇‍♀️',
-    products: [1, 5, 6], // IDs المنتجات الموجودة فعلاً
+    image: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=400&h=400&fit=crop',
+    imageAlt: '💇‍♀️',
+    products: [1, 5, 6],
     originalPrice: 500,
-    discountPercentage: 15, // خصم خاص بالعرض
+    discountPercentage: 0,
     category: 'hair-care',
     featured: true,
     benefits: [
@@ -42,10 +47,11 @@ const bundlesRawData = [
     id: 'premium-oils-bundle',
     name: 'باقة الزيوت الممتازة',
     description: 'أفضل 3 زيوت طبيعية مميزة للعناية الفاخرة',
-    image: '✨',
-    products: [4, 2, 6], // IDs الصحيحة
+    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=400&h=400&fit=crop',
+    imageAlt: '✨',
+    products: [4, 2, 6],
     originalPrice: 630,
-    discountPercentage: 12,
+    discountPercentage: 0,
     category: 'premium',
     featured: true,
     benefits: [
@@ -59,10 +65,11 @@ const bundlesRawData = [
     id: 'skin-care-bundle',
     name: 'باقة العناية بالبشرة الطبيعية',
     description: 'ثلاثة زيوت مثالية للعناية اليومية بالبشرة',
-    image: '🌸',
-    products: [2, 3, 6], // IDs الصحيحة
+    image: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=400&h=400&fit=crop',
+    imageAlt: '🌸',
+    products: [2, 3, 6],
     originalPrice: 590,
-    discountPercentage: 10,
+    discountPercentage: 0,
     category: 'skincare',
     featured: false,
     benefits: [
@@ -76,10 +83,11 @@ const bundlesRawData = [
     id: 'hair-growth-bundle',
     name: 'باقة تحفيز نمو الشعر',
     description: 'أقوى 3 زيوت لمحاربة تساقط الشعر وتحفيز النمو',
-    image: '🌱',
-    products: [5, 1, 4], // IDs الصحيحة
+    image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=400&h=400&fit=crop',
+    imageAlt: '🌱',
+    products: [5, 1, 4],
     originalPrice: 550,
-    discountPercentage: 8,
+    discountPercentage: 0,
     category: 'hair-growth',
     featured: false,
     benefits: [
@@ -95,15 +103,60 @@ const bundlesRawData = [
 // حساب الأسعار تلقائياً
 // ============================================
 export const BUNDLE_OFFERS = bundlesRawData.map(bundle => {
-  // الخصم النهائي = الخصم الخاص بالعرض + الخصم العام
-  const totalDiscount = bundle.discountPercentage + GLOBAL_BUNDLE_DISCOUNT;
-  const finalPrice = calculateBundlePrice(bundle.originalPrice, totalDiscount);
-  const savings = calculateSavings(bundle.originalPrice, totalDiscount);
+  // ✅ إذا الخصم الخاص = 0، استخدم الخصم العام
+  // ✅ إذا الخصم الخاص > 0، استخدم الخصم الخاص فقط (بدون جمع)
+  const effectiveDiscount = bundle.discountPercentage > 0
+    ? bundle.discountPercentage
+    : GLOBAL_BUNDLE_DISCOUNT;
+  
+  const finalPrice = calculateBundlePrice(bundle.originalPrice, effectiveDiscount);
+  const savings = calculateSavings(bundle.originalPrice, effectiveDiscount);
   
   return {
     ...bundle,
-    bundlePrice: finalPrice, // ✅ السعر يتحسب تلقائياً
-    savings: savings, // ✅ التوفير يتحسب تلقائياً
-    totalDiscountPercentage: totalDiscount // ✅ نسبة الخصم الكلية
+    bundlePrice: finalPrice,
+    savings: savings,
+    totalDiscountPercentage: effectiveDiscount
   };
 });
+
+// ============================================
+// دالة للحصول على عرض حسب ID
+// ============================================
+export const getBundleById = (id) => {
+  return BUNDLE_OFFERS.find(b => b.id === id) || null;
+};
+
+// ============================================
+// دالة للحصول على العروض المميزة
+// ============================================
+export const getFeaturedBundles = () => {
+  return BUNDLE_OFFERS.filter(b => b.featured);
+};
+
+// ============================================
+// دالة للتحقق من صحة المنتجات في العرض
+// ============================================
+export const validateBundleProducts = (bundle) => {
+  if (!bundle || !bundle.products) return false;
+  
+  const validProducts = bundle.products
+    .map(id => getProductById(id))
+    .filter(product => product !== null);
+  
+  return validProducts.length === bundle.products.length;
+};
+
+// ============================================
+// دالة لحساب السعر الفعلي للعرض من المنتجات
+// ============================================
+export const calculateBundleOriginalPrice = (bundle) => {
+  if (!bundle || !bundle.products) return 0;
+  
+  return bundle.products.reduce((total, productId) => {
+    const product = getProductById(productId);
+    return total + (product ? product.originalPrice : 0);
+  }, 0);
+};
+
+export default BUNDLE_OFFERS;

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
-import { Notification, ErrorMessage } from './components/common';
-
+import { Notification, GlobalStyles } from './components/common';
+import { ArrowUp } from 'lucide-react';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -15,78 +15,50 @@ import ContactPage from './pages/ContactPage';
 import AboutPage from './pages/AboutPage';
 import WishlistPage from './pages/WishlistPage';
 
-// Simplified pages
-// const WishlistPage = () => {
-//   const { state, dispatch } = useAppContext();
-  
-//   if (state.wishlist.length === 0) {
-//     return (
-//       <div className="min-h-screen bg-gray-50 py-12">
-//         <div className="container mx-auto px-4">
-//           <div className="text-center max-w-md mx-auto">
-//             <h1 className="text-3xl font-bold text-gray-600 mb-4">قائمة المفضلة فارغة</h1>
-//             <p className="text-gray-500 mb-8">ابدأ بإضافة المنتجات التي تحبينها</p>
-//             <button
-//               onClick={() => dispatch({ type: 'SET_PAGE', payload: 'products' })}
-//               className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors"
-//             >
-//               تصفح المنتجات
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
+// ============================================
+// SCROLL TO TOP BUTTON
+// ============================================
+const ScrollToTopButton = () => {
+  const [isVisible, setIsVisible] = useState(false);
 
-//   return (
-//     <div className="min-h-screen bg-gray-50 py-12">
-//       <div className="container mx-auto px-4">
-//         <h1 className="text-4xl font-bold text-gray-800 mb-8">المفضلة</h1>
-//         <p>صفحة المفضلة - يمكن إكمال التفاصيل لاحقاً</p>
-//       </div>
-//     </div>
-//   );
-// };
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.pageYOffset > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
 
-// const AboutPage = () => (
-//   <div className="min-h-screen bg-gray-50 py-12">
-//     <div className="container mx-auto px-4">
-//       <div className="text-center mb-16">
-//         <h1 className="text-5xl font-bold text-green-600 mb-6">من نحن</h1>
-//         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-//           Kavoral هي علامة تجارية رائدة في مجال الزيوت الطبيعية والعناية بالجمال
-//         </p>
-//       </div>
-      
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-//         <div className="text-center p-8 bg-white rounded-xl shadow-lg">
-//           <h3 className="text-xl font-bold text-gray-800 mb-4">جودة مضمونة</h3>
-//           <p className="text-gray-600 leading-relaxed">
-//             جميع منتجاتنا مختبرة ومعتمدة من هيئات دولية متخصصة
-//           </p>
-//         </div>
-        
-//         <div className="text-center p-8 bg-white rounded-xl shadow-lg">
-//           <h3 className="text-xl font-bold text-gray-800 mb-4">توصيل سريع</h3>
-//           <p className="text-gray-600 leading-relaxed">
-//             نصل إليك في أقل من 48 ساعة داخل القاهرة والجيزة
-//           </p>
-//         </div>
-        
-//         <div className="text-center p-8 bg-white rounded-xl shadow-lg">
-//           <h3 className="text-xl font-bold text-gray-800 mb-4">خدمة عملاء متميزة</h3>
-//           <p className="text-gray-600 leading-relaxed">
-//             فريق دعم متخصص لمساعدتك في اختيار المنتج المناسب
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   </div>
-// );
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
+  }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
+  return (
+    <>
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 left-6 z-50 bg-gradient-to-r from-green-600 to-green-700 text-white p-3 md:p-4 rounded-full shadow-2xl hover:shadow-glow-lg transition-all duration-300 transform hover:scale-110 active:scale-95 group"
+          aria-label="العودة لأعلى"
+        >
+          <ArrowUp size={24} className="group-hover:animate-bounce" />
+        </button>
+      )}
+    </>
+  );
+};
 
-// Main App Content Component
+// ============================================
+// APP CONTENT COMPONENT
+// ============================================
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
 
@@ -105,30 +77,27 @@ const AppContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" 
-         style={{ 
-           direction: 'rtl', 
-           fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif' 
-         }}>
+    <div 
+      className="min-h-screen bg-gray-50 flex flex-col" 
+      style={{ 
+        direction: 'rtl', 
+        fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Cairo", sans-serif' 
+      }}
+    >
       <Header />
       
-      {state.error && (
-        <div className="container mx-auto px-4 py-4">
-          <ErrorMessage 
-            message={state.error} 
-            onRetry={() => dispatch({ type: 'CLEAR_ERROR' })} 
-          />
-        </div>
-      )}
-      
-      <main>
+      {/* Main content with padding to avoid header overlap */}
+      <main className="flex-1" style={{ paddingTop: '80px' }}>
         {renderPage()}
       </main>
       
       <Footer />
       
-      {/* Notifications */}
-      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+      {/* Scroll to Top Button */}
+      <ScrollToTopButton />
+      
+      {/* Notifications Container - Fixed position below header */}
+      <div className="fixed top-24 right-4 left-4 md:left-auto md:right-4 z-40 space-y-2 md:max-w-sm">
         {state.notifications.map(notification => (
           <Notification
             key={notification.id}
@@ -138,97 +107,60 @@ const AppContent = () => {
         ))}
       </div>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-        
-        /* Smooth scrolling */
-        html {
-          scroll-behavior: smooth;
-        }
-        
-        /* Custom scrollbar for webkit browsers */
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-          background: #f1f1f1;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-          background: #16a34a;
-          border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-          background: #15803d;
-        }
-      `}</style>
+      {/* Global Styles */}
+      <GlobalStyles />
 
-
-        {/* Custom Styles - Mobile Optimized */}
+      {/* Custom Scrollbar & Animations */}
       <style jsx global>{`
-        /* Prevent horizontal scroll on mobile */
+        /* Prevent horizontal scroll */
         html, body {
           overflow-x: hidden;
           max-width: 100vw;
+          position: relative;
         }
         
         * {
           box-sizing: border-box;
         }
         
-        /* Smooth animations */
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
+        /* Force header to stay fixed */
+        header {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          transform: none !important;
+          z-index: 1000 !important;
         }
         
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
+        /* Ensure main content doesn't overlap header */
+        main {
+          padding-top: 80px;
         }
         
         /* Smooth scrolling */
         html {
           scroll-behavior: smooth;
+          scroll-padding-top: 80px;
         }
         
-        /* Custom scrollbar for webkit browsers */
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
-          width: 8px;
+          width: 10px;
         }
         
         ::-webkit-scrollbar-track {
           background: #f1f1f1;
+          border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: #16a34a;
-          border-radius: 4px;
+          background: linear-gradient(180deg, #16a34a 0%, #14b8a6 100%);
+          border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: #15803d;
+          background: linear-gradient(180deg, #15803d 0%, #0f766e 100%);
         }
         
         /* Mobile touch optimization */
@@ -237,16 +169,51 @@ const AppContent = () => {
             -webkit-tap-highlight-color: transparent;
           }
           
-          input, textarea {
+          input, textarea, select {
             font-size: 16px; /* Prevent zoom on focus */
           }
+        }
+        
+        /* Image loading optimization */
+        img {
+          image-rendering: -webkit-optimize-contrast;
+        }
+        
+        /* Prevent text selection on buttons */
+        button {
+          -webkit-user-select: none;
+          user-select: none;
+        }
+        
+        /* Line clamp utilities */
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </div>
   );
 };
 
-// Main App Component
+// ============================================
+// MAIN APP COMPONENT
+// ============================================
 const App = () => {
   return (
     <AppProvider>

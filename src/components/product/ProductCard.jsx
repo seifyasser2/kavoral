@@ -1,21 +1,23 @@
-import React from 'react';
-import { Heart, Star, Plus, Minus } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Star, Plus, Minus, ShoppingCart, Eye } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { Badge } from '../common';
 
 const ProductCard = ({ product }) => {
-  const { state, dispatch } = useAppContext();
-  const quantity = state.quantities[product.id] || 0;
+  const { state, dispatch, addToCart, toggleWishlist, navigateTo } = useAppContext();
+  const [localQuantity, setLocalQuantity] = useState(0);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const updateQuantity = (change) => {
-    dispatch({
-      type: 'UPDATE_QUANTITY',
-      payload: { id: product.id, quantity: quantity + change }
-    });
+  const isInWishlist = state.wishlist.some(item => item.id === product.id);
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const discountPercentage = product.discountPercentage || 0;
+
+  const handleUpdateQuantity = (change) => {
+    setLocalQuantity(prev => Math.max(0, prev + change));
   };
 
-  const addToCart = () => {
-    if (quantity <= 0) {
+  const handleAddToCart = async () => {
+    if (localQuantity <= 0) {
       dispatch({
         type: 'ADD_NOTIFICATION',
         payload: { message: 'يرجى تحديد الكمية أولاً', type: 'warning' }
@@ -31,69 +33,92 @@ const ProductCard = ({ product }) => {
       return;
     }
 
-    dispatch({
-      type: 'ADD_TO_CART',
-      payload: { ...product, quantity }
-    });
+    setIsAdding(true);
 
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: { message: `تم إضافة ${product.name} للسلة`, type: 'success' }
-    });
+    // إضافة تأخير بسيط لتجربة مستخدم أفضل
+    setTimeout(() => {
+      dispatch({
+        type: 'ADD_TO_CART',
+        payload: { ...product, quantity: localQuantity }
+      });
 
-    dispatch({
-      type: 'UPDATE_QUANTITY',
-      payload: { id: product.id, quantity: 0 }
-    });
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: { 
+          message: `تم إضافة ${localQuantity} من ${product.name} للسلة`, 
+          type: 'success' 
+        }
+      });
+
+      setLocalQuantity(0);
+      setIsAdding(false);
+    }, 300);
   };
 
-  const viewDetails = () => {
+  const handleViewDetails = () => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: product });
-    dispatch({ type: 'SET_PAGE', payload: 'product-details' });
+    navigateTo('product-details');
   };
 
-  const toggleWishlist = () => {
-    const isInWishlist = state.wishlist.find(item => item.id === product.id);
-    
-    if (isInWishlist) {
-      dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: product.id });
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'تم حذف المنتج من المفضلة', type: 'info' }
-      });
-    } else {
-      dispatch({ type: 'ADD_TO_WISHLIST', payload: product });
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'تم إضافة المنتج للمفضلة', type: 'success' }
-      });
-    }
+  const handleToggleWishlist = (e) => {
+    e.stopPropagation();
+    toggleWishlist(product);
   };
-
-  const isInWishlist = state.wishlist.find(item => item.id === product.id);
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
-  // استخدم النسبة المباشرة من البيانات
-  const discountPercentage = product.discountPercentage || 0;
 
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+      {/* Top bar with discount */}
+      {hasDiscount && (
+        <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500"></div>
+      )}
+
       <div className="p-6">
         {/* Header with image and wishlist */}
         <div className="flex justify-between items-start mb-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center text-4xl group-hover:scale-105 transition-transform">
-            {product.image}
+          <div 
+            className="w-28 h-28 md:w-32 md:h-32 bg-gradient-to-br from-green-50 to-teal-50 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer group-hover:scale-110 transition-transform duration-300 relative shadow-md"
+            onClick={handleViewDetails}
+          >
+            {product.image && product.image.startsWith('http') ? (
+              <img 
+                src={product.image} 
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className={`text-5xl md:text-6xl ${product.image && product.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+            >
+              {product.imageAlt || product.image || '🌿'}
+            </div>
           </div>
           
           <div className="flex flex-col gap-2">
-            {product.featured && <Badge variant="success">مميز</Badge>}
-            {hasDiscount && <Badge variant="warning">{discountPercentage}%</Badge>}
-            {!product.inStock && <Badge variant="danger">نفذ</Badge>}
+            {/* Badges */}
+            {product.featured && (
+              <Badge variant="warning" className="animate-pulse">
+                ⭐ مميز
+              </Badge>
+            )}
+            {hasDiscount && (
+              <Badge variant="danger" className="flex items-center gap-1">
+                ⚡ {discountPercentage}%
+              </Badge>
+            )}
+            {!product.inStock && (
+              <Badge variant="danger">نفذ</Badge>
+            )}
             
+            {/* Wishlist Button */}
             <button
-              onClick={toggleWishlist}
+              onClick={handleToggleWishlist}
               className={`p-2 rounded-full transition-all ${
                 isInWishlist 
-                  ? 'text-red-500 bg-red-50' 
+                  ? 'text-red-500 bg-red-50 scale-110' 
                   : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
               }`}
               aria-label={isInWishlist ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
@@ -104,91 +129,140 @@ const ProductCard = ({ product }) => {
         </div>
 
         {/* Product info */}
-        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors">
-          {product.name}
-        </h3>
-        
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm text-gray-500">{product.size}</span>
-          {product.soldCount > 100 && (
-            <Badge variant="info">الأكثر مبيعاً</Badge>
-          )}
-        </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl font-bold text-green-600">{product.price} جنيه</span>
-          {hasDiscount && (
-            <span className="text-lg text-gray-400 line-through">{product.originalPrice} جنيه</span>
-          )}
-        </div>
-
-        {/* Rating */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                size={16}
-                className={i < Math.floor(product.rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}
-              />
-            ))}
+        <div 
+          className="cursor-pointer" 
+          onClick={handleViewDetails}
+        >
+          <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
+            {product.name}
+          </h3>
+          
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm text-gray-500">{product.size}</span>
+            {product.soldCount > 100 && (
+              <Badge variant="info" className="text-xs">🔥 الأكثر مبيعاً</Badge>
+            )}
           </div>
-          <span className="text-sm text-gray-600">({product.reviews})</span>
+
+          {/* Price */}
+          <div className="bg-gradient-to-r from-green-50 to-teal-50 border border-green-100 rounded-lg p-3 mb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-green-600">
+                  {product.price} جنيه
+                </span>
+                {hasDiscount && (
+                  <span className="text-sm text-gray-400 line-through">
+                    {product.originalPrice} جنيه
+                  </span>
+                )}
+              </div>
+              {hasDiscount && (
+                <Badge variant="danger" className="text-xs">
+                  وفّر {product.savings} ج
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Rating */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  size={16}
+                  className={i < Math.floor(product.rating) ? 'text-yellow-500 fill-current' : 'text-gray-300'}
+                />
+              ))}
+            </div>
+            <span className="text-sm text-gray-600">
+              {product.rating} ({product.reviews})
+            </span>
+          </div>
         </div>
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1 mb-4">
-          {product.tags.slice(0, 2).map((tag, index) => (
-            <Badge key={index} variant="default">{tag}</Badge>
+          {product.tags.slice(0, 3).map((tag, index) => (
+            <Badge key={index} variant="default" className="text-xs">
+              {tag}
+            </Badge>
           ))}
         </div>
 
         {/* Quantity selector */}
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <button
-            onClick={() => updateQuantity(-1)}
-            disabled={quantity <= 0}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-          >
-            <Minus size={16} className={quantity <= 0 ? 'text-gray-300' : 'text-gray-600'} />
-          </button>
-          
-          <span className="text-xl font-bold w-12 text-center">{quantity}</span>
-          
-          <button
-            onClick={() => updateQuantity(1)}
-            disabled={!product.inStock}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-          >
-            <Plus size={16} className="text-gray-600" />
-          </button>
-        </div>
+        <div className="bg-gray-50 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">الكمية:</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handleUpdateQuantity(-1)}
+                disabled={localQuantity <= 0}
+                className="w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:border-green-500 disabled:border-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+              >
+                <Minus size={14} className={localQuantity <= 0 ? 'text-gray-300' : 'text-gray-600'} />
+              </button>
+              
+              <span className="text-xl font-bold w-8 text-center">{localQuantity}</span>
+              
+              <button
+                onClick={() => handleUpdateQuantity(1)}
+                disabled={!product.inStock}
+                className="w-8 h-8 rounded-full bg-white border-2 border-gray-200 hover:border-green-500 disabled:border-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-all"
+              >
+                <Plus size={14} className="text-gray-600" />
+              </button>
+            </div>
+          </div>
 
-        {quantity > 0 && (
-          <p className="text-center text-green-600 font-bold mb-4">
-            المجموع: {quantity * product.price} جنيه
-          </p>
-        )}
+          {localQuantity > 0 && (
+            <div className="text-center">
+              <span className="text-green-600 font-bold">
+                المجموع: {localQuantity * product.price} جنيه
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* Action buttons */}
         <div className="flex gap-2">
           <button
-            onClick={viewDetails}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg transition-colors font-medium text-sm"
+            onClick={handleViewDetails}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 px-4 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
           >
+            <Eye size={16} />
             تفاصيل
           </button>
           
           <button
-            onClick={addToCart}
-            disabled={quantity <= 0 || !product.inStock}
-            className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors font-medium text-sm"
+            onClick={handleAddToCart}
+            disabled={localQuantity <= 0 || !product.inStock || isAdding}
+            className={`flex-1 py-2.5 px-4 rounded-lg transition-all font-medium text-sm flex items-center justify-center gap-2 ${
+              isAdding
+                ? 'bg-green-500 text-white scale-95'
+                : 'bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white'
+            }`}
           >
-            {product.inStock ? 'أضف للسلة' : 'نفذ'}
+            {isAdding ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                جاري الإضافة...
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={16} />
+                {product.inStock ? 'أضف للسلة' : 'نفذ'}
+              </>
+            )}
           </button>
         </div>
       </div>
+
+      {/* Bottom gradient bar */}
+      {hasDiscount && (
+        <div className="h-1 bg-gradient-to-r from-green-500 via-teal-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      )}
     </div>
   );
 };
