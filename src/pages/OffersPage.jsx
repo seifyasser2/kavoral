@@ -88,7 +88,7 @@ const OffersPage = () => {
 
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-3">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-xl flex items-center justify-center overflow-hidden">
+              <div className="w-24 h-24 md:w-32 md:h-32 bg-white/20 rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
                 {bundle.image && bundle.image.startsWith('http') ? (
                   <img 
                     src={bundle.image} 
@@ -101,14 +101,14 @@ const OffersPage = () => {
                   />
                 ) : null}
                 <div 
-                  className={`text-4xl md:text-5xl ${bundle.image && bundle.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                  className={`text-5xl md:text-6xl ${bundle.image && bundle.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
                 >
                   {bundle.imageAlt || bundle.image || '🎁'}
                 </div>
               </div>
               <Badge variant="warning" className="bg-yellow-400 text-yellow-900 flex items-center gap-1 animate-pulse">
                 <Sparkles size={14} />
-                خصم {bundle.totalDiscountPercentage}%
+                وفر {bundle.totalDiscountPercentage}%
               </Badge>
             </div>
             <h3 className="text-xl md:text-2xl font-bold mb-2">{bundle.name}</h3>
@@ -123,10 +123,10 @@ const OffersPage = () => {
               <Package size={18} />
               المنتجات المشمولة ({bundleProducts.length}):
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {bundleProducts.map(product => (
-                <div key={product.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div key={product.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors shadow-sm">
+                  <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md">
                     {product.image && product.image.startsWith('http') ? (
                       <img 
                         src={product.image} 
@@ -138,15 +138,15 @@ const OffersPage = () => {
                         }}
                       />
                     ) : null}
-                    <div className={`text-xl ${product.image && product.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                    <div className={`text-2xl md:text-3xl ${product.image && product.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
                       {product.imageAlt || product.image || '🌿'}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-sm font-medium text-gray-800 block truncate">{product.name}</span>
-                    <span className="text-xs text-gray-500">{product.size}</span>
+                    <span className="text-sm md:text-base font-medium text-gray-800 block truncate">{product.name}</span>
+                    <span className="text-xs md:text-sm text-gray-500">{product.size}</span>
                   </div>
-                  <span className="text-sm font-bold text-green-600 flex-shrink-0">{product.price}ج</span>
+                  <span className="text-sm md:text-base font-bold text-green-600 flex-shrink-0">{product.price}ج</span>
                 </div>
               ))}
             </div>

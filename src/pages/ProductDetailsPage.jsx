@@ -94,7 +94,7 @@ const ProductDetailsPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12 mb-12">
             {/* Product Image */}
             <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-              <div className="w-full aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-6 relative overflow-hidden">
+              <div className="w-full aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-6 relative overflow-hidden shadow-lg">
                 <div className="absolute inset-0 bg-gradient-to-t from-green-200 to-transparent opacity-50"></div>
                 {product.image && product.image.startsWith('http') ? (
                   <img 
@@ -107,7 +107,7 @@ const ProductDetailsPage = () => {
                     }}
                   />
                 ) : null}
-                <span className={`text-8xl md:text-9xl relative z-10 ${product.image && product.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                <span className={`text-9xl md:text-9xl relative z-10 ${product.image && product.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
                   {product.imageAlt || product.image || '🌿'}
                 </span>
               </div>
@@ -300,7 +300,7 @@ const ProductDetailsPage = () => {
               <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 md:mb-8 text-center">
                 منتجات مشابهة
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {relatedProducts.map(product => (
                   <ProductCard key={product.id} product={product} />
                 ))}

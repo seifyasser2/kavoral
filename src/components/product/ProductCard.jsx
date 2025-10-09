@@ -66,13 +66,13 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group h-full flex flex-col">
       {/* Top bar with discount */}
       {hasDiscount && (
         <div className="h-1 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500"></div>
       )}
 
-      <div className="p-6">
+      <div className="p-6 flex flex-col flex-1">
         {/* Header with image and wishlist */}
         <div className="flex justify-between items-start mb-4">
           <div 
@@ -225,8 +225,8 @@ const ProductCard = ({ product }) => {
           )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
+        {/* Action buttons - Fixed to bottom */}
+        <div className="flex gap-2 mt-auto">
           <button
             onClick={handleViewDetails}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 px-4 rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
