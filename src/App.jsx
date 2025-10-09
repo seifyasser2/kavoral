@@ -16,18 +16,20 @@ import AboutPage from './pages/AboutPage';
 import WishlistPage from './pages/WishlistPage';
 
 // ============================================
-// SCROLL TO TOP BUTTON
+// SCROLL TO TOP BUTTON - Enhanced
 // ============================================
 const ScrollToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      const scrolled = window.pageYOffset;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = (scrolled / height) * 100;
+      
+      setScrollProgress(progress);
+      setIsVisible(scrolled > 300);
     };
 
     window.addEventListener('scroll', toggleVisibility);
@@ -46,13 +48,73 @@ const ScrollToTopButton = () => {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-6 left-6 z-50 bg-gradient-to-r from-green-600 to-green-700 text-white p-3 md:p-4 rounded-full shadow-2xl hover:shadow-glow-lg transition-all duration-300 transform hover:scale-110 active:scale-95 group"
+          className="fixed bottom-6 left-6 z-50 group"
           aria-label="العودة لأعلى"
         >
-          <ArrowUp size={24} className="group-hover:animate-bounce" />
+          {/* Progress Ring */}
+          <svg className="absolute inset-0 w-14 h-14 transform -rotate-90">
+            <circle
+              cx="28"
+              cy="28"
+              r="24"
+              stroke="currentColor"
+              strokeWidth="3"
+              fill="none"
+              className="text-gray-200"
+            />
+            <circle
+              cx="28"
+              cy="28"
+              r="24"
+              stroke="currentColor"
+              strokeWidth="3"
+              fill="none"
+              className="text-green-500 transition-all duration-300"
+              style={{
+                strokeDasharray: `${2 * Math.PI * 24}`,
+                strokeDashoffset: `${2 * Math.PI * 24 * (1 - scrollProgress / 100)}`
+              }}
+            />
+          </svg>
+          
+          {/* Button */}
+          <div className="relative w-14 h-14 bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-full shadow-2xl hover:shadow-glow-xl transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center">
+            <ArrowUp size={24} className="group-hover:animate-bounce" />
+          </div>
         </button>
       )}
     </>
+  );
+};
+
+// ============================================
+// LOADING SCREEN - Enhanced
+// ============================================
+const LoadingScreen = () => {
+  return (
+    <div className="fixed inset-0 z-[9999] bg-gradient-to-br from-green-50 via-white to-teal-50 flex items-center justify-center">
+      <div className="text-center">
+        {/* Animated Logo */}
+        <div className="relative w-32 h-32 mx-auto mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-20 animate-ping"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-30 animate-pulse"></div>
+          <div className="relative z-10 text-7xl animate-bounce">
+            🌿
+          </div>
+        </div>
+        
+        {/* Loading Text */}
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-4">
+          Kavoral
+        </h2>
+        <p className="text-gray-600 mb-6">جاري التحميل...</p>
+        
+        {/* Loading Bar */}
+        <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden mx-auto">
+          <div className="h-full bg-gradient-to-r from-green-500 to-teal-500 rounded-full animate-shimmer"></div>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -61,6 +123,16 @@ const ScrollToTopButton = () => {
 // ============================================
 const AppContent = () => {
   const { state, dispatch } = useAppContext();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simulate initial loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const renderPage = () => {
     switch (state.currentPage) {
@@ -76,9 +148,13 @@ const AppContent = () => {
     }
   };
 
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div 
-      className="min-h-screen bg-gray-50 flex flex-col" 
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col" 
       style={{ 
         direction: 'rtl', 
         fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Cairo", sans-serif' 
@@ -86,9 +162,11 @@ const AppContent = () => {
     >
       <Header />
       
-      {/* Main content with padding to avoid header overlap */}
+      {/* Main content */}
       <main className="flex-1" style={{ paddingTop: '80px' }}>
-        {renderPage()}
+        <div className="animate-fade-in">
+          {renderPage()}
+        </div>
       </main>
       
       <Footer />
@@ -96,7 +174,7 @@ const AppContent = () => {
       {/* Scroll to Top Button */}
       <ScrollToTopButton />
       
-      {/* Notifications Container - Fixed position below header */}
+      {/* Notifications Container */}
       <div className="fixed top-24 right-4 left-4 md:left-auto md:right-4 z-40 space-y-2 md:max-w-sm">
         {state.notifications.map(notification => (
           <Notification
@@ -110,7 +188,7 @@ const AppContent = () => {
       {/* Global Styles */}
       <GlobalStyles />
 
-      {/* Custom Scrollbar & Animations */}
+      {/* Enhanced Custom Styles */}
       <style jsx global>{`
         /* Prevent horizontal scroll */
         html, body {
@@ -138,29 +216,30 @@ const AppContent = () => {
           padding-top: 80px;
         }
         
-        /* Smooth scrolling */
+        /* Enhanced smooth scrolling */
         html {
           scroll-behavior: smooth;
           scroll-padding-top: 80px;
         }
         
-        /* Custom scrollbar */
+        /* Custom scrollbar - Enhanced */
         ::-webkit-scrollbar {
-          width: 10px;
+          width: 12px;
         }
         
         ::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: linear-gradient(to bottom, #f1f5f9 0%, #e2e8f0 100%);
           border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #16a34a 0%, #14b8a6 100%);
+          background: linear-gradient(180deg, #22c55e 0%, #14b8a6 100%);
           border-radius: 10px;
+          border: 2px solid #f1f5f9;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #15803d 0%, #0f766e 100%);
+          background: linear-gradient(180deg, #16a34a 0%, #0d9488 100%);
         }
         
         /* Mobile touch optimization */
@@ -170,7 +249,7 @@ const AppContent = () => {
           }
           
           input, textarea, select {
-            font-size: 16px; /* Prevent zoom on focus */
+            font-size: 16px !important;
           }
         }
         
@@ -185,26 +264,178 @@ const AppContent = () => {
           user-select: none;
         }
         
-        /* Line clamp utilities */
-        .line-clamp-1 {
-          display: -webkit-box;
-          -webkit-line-clamp: 1;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+        /* Enhanced shimmer effect */
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
         }
         
-        .line-clamp-2 {
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+        .animate-shimmer {
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.5),
+            transparent
+          );
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
         }
         
-        .line-clamp-3 {
-          display: -webkit-box;
-          -webkit-line-clamp: 3;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+        /* Page transition */
+        .page-transition {
+          animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        /* Gradient animations */
+        @keyframes gradient-x {
+          0%, 100% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+        }
+        
+        .animate-gradient-x {
+          background-size: 200% 200%;
+          animation: gradient-x 3s ease infinite;
+        }
+        
+        /* Glow effect */
+        .glow-effect {
+          position: relative;
+        }
+        
+        .glow-effect::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: inherit;
+          background: linear-gradient(45deg, #22c55e, #14b8a6, #06b6d4);
+          opacity: 0;
+          filter: blur(10px);
+          transition: opacity 0.3s ease;
+        }
+        
+        .glow-effect:hover::before {
+          opacity: 0.7;
+        }
+        
+        /* Card hover effects */
+        .card-3d {
+          transform-style: preserve-3d;
+          transition: transform 0.5s ease;
+        }
+        
+        .card-3d:hover {
+          transform: perspective(1000px) rotateY(5deg) rotateX(5deg);
+        }
+        
+        /* Floating elements */
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        .float {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Pulse animation for badges */
+        @keyframes pulse-scale {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+        }
+        
+        .pulse-scale {
+          animation: pulse-scale 2s ease-in-out infinite;
+        }
+        
+        /* Text shimmer effect */
+        .text-shimmer {
+          background: linear-gradient(
+            90deg,
+            #22c55e 0%,
+            #14b8a6 25%,
+            #06b6d4 50%,
+            #14b8a6 75%,
+            #22c55e 100%
+          );
+          background-size: 200% auto;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          animation: shimmer 3s linear infinite;
+        }
+        
+        /* Loading skeleton */
+        .skeleton {
+          background: linear-gradient(
+            90deg,
+            #f0f0f0 25%,
+            #e0e0e0 50%,
+            #f0f0f0 75%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
+          border-radius: 8px;
+        }
+        
+        /* Focus visible enhancements */
+        *:focus-visible {
+          outline: 3px solid #22c55e;
+          outline-offset: 2px;
+          border-radius: 8px;
+        }
+        
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+          *,
+          *::before,
+          *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
+        
+        /* Print styles */
+        @media print {
+          header,
+          footer,
+          button,
+          .no-print {
+            display: none !important;
+          }
+          
+          * {
+            background: white !important;
+            color: black !important;
+          }
         }
       `}</style>
     </div>
