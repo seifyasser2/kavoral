@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { 
   ShoppingCart, Plus, Minus, Trash2, Send, User, 
   Gift, Truck, MessageCircle, Package
@@ -8,24 +8,78 @@ import { SITE_CONFIG, calculateShipping, isEligibleForFreeShipping, getRemaining
 import { getProductById } from '../data/products';
 import { Badge, LoadingSpinner, EmptyState, ConfirmModal } from '../components/common';
 
+// ============================================
+// ثوابت التحقق
+// ============================================
+const MIN_NAME_LENGTH = 3;
+const MAX_NAME_LENGTH = 100;
+const MIN_ADDRESS_LENGTH = 10;
+const MAX_ADDRESS_LENGTH = 500;
+const SUBMIT_RATE_LIMIT = 5000;
+const MAX_QUANTITY_PER_ITEM = 100;
+const MIN_QUANTITY = 1;
+
+// ============================================
+// دالة تنظيف البيانات - حماية من XSS
+// ============================================
+const sanitizeText = (text) => {
+  if (typeof text !== 'string') return '';
+  
+  return text
+    .replace(/[<>\"'`]/g, '')
+    .replace(/\n{2,}/g, '\n')
+    .trim()
+    .substring(0, 1000);
+};
+
+// ============================================
+// دالة التحقق من الهاتف
+// ============================================
+const validatePhone = (phone) => {
+  const phoneRegex = /^(\+?20|0)?1[0125]\d{8}$/;
+  return phoneRegex.test(phone?.trim());
+};
+
+// ============================================
+// دالة التحقق من الكمية
+// ============================================
+const validateQuantity = (quantity) => {
+  return Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY_PER_ITEM, quantity));
+};
+
 const CartPage = () => {
   const { state, dispatch, navigateTo } = useAppContext();
   const [isCheckout, setIsCheckout] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [itemToDelete, setItemToDelete] = useState(null); // للـ confirmation
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [lastSubmit, setLastSubmit] = useState(0);
 
-  const updateCartQuantity = (id, quantity) => {
-    if (quantity <= 0) {
-      // اسأل أولاً قبل الحذف
+  // حساب الإجمالي باستخدام useMemo
+  const cartTotals = useMemo(() => {
+    const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const shipping = calculateShipping(total);
+    const finalTotal = total + shipping;
+    const remaining = getRemainingForFreeShipping(total);
+    
+    return { total, shipping, finalTotal, remaining };
+  }, [state.cart]);
+
+  const updateCartQuantity = useCallback((id, quantity) => {
+    const validatedQuantity = validateQuantity(quantity);
+    
+    if (validatedQuantity <= 0) {
       const item = state.cart.find(i => i.id === id);
       setItemToDelete(item);
     } else {
-      dispatch({ type: 'UPDATE_CART_QUANTITY', payload: { id, quantity } });
+      dispatch({ 
+        type: 'UPDATE_CART_QUANTITY', 
+        payload: { id, quantity: validatedQuantity } 
+      });
     }
-  };
+  }, [state.cart, dispatch]);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (itemToDelete) {
       dispatch({ type: 'REMOVE_FROM_CART', payload: itemToDelete.id });
       dispatch({
@@ -34,71 +88,70 @@ const CartPage = () => {
       });
       setItemToDelete(null);
     }
-  };
+  }, [itemToDelete, dispatch]);
 
-  const cancelDelete = () => {
+  const cancelDelete = useCallback(() => {
     setItemToDelete(null);
-  };
+  }, []);
 
-  const removeFromCart = (id, name) => {
+  const removeFromCart = useCallback((id, name) => {
     const item = state.cart.find(i => i.id === id);
     setItemToDelete(item);
-  };
+  }, [state.cart]);
 
-  // Auto-fill saved customer info when opening checkout
-  useEffect(() => {
-    if (isCheckout && !state.customerInfo.name) {
-      try {
-        const savedInfo = localStorage.getItem('kavoral_customer_info');
-        if (savedInfo) {
-          const parsedInfo = JSON.parse(savedInfo);
-          if (parsedInfo.name) {
-            dispatch({
-              type: 'UPDATE_CUSTOMER_INFO',
-              payload: parsedInfo
-            });
-            dispatch({
-              type: 'ADD_NOTIFICATION',
-              payload: { 
-                message: '✨ تم تعبئة بياناتك المحفوظة تلقائياً', 
-                type: 'info' 
-              }
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error loading saved info:', error);
-      }
-    }
-  }, [isCheckout]);
-
-  // Validation
-  const validateForm = () => {
+  // ============================================
+  // التحقق من النموذج المحسّن
+  // ============================================
+  const validateForm = useCallback(() => {
     const newErrors = {};
-    
-    if (!state.customerInfo.name || state.customerInfo.name.trim().length < 3) {
-      newErrors.name = 'الاسم يجب أن يكون 3 أحرف على الأقل';
+
+    // التحقق من الاسم
+    const name = state.customerInfo.name?.trim();
+    if (!name || name.length < MIN_NAME_LENGTH) {
+      newErrors.name = `الاسم يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
     }
-    
-    const phoneRegex = /^01[0125][0-9]{8}$/;
-    if (!phoneRegex.test(state.customerInfo.phone)) {
+    if (name && name.length > MAX_NAME_LENGTH) {
+      newErrors.name = `الاسم طويل جداً (${MAX_NAME_LENGTH} حروف كحد أقصى)`;
+    }
+
+    // التحقق من الهاتف
+    const phone = state.customerInfo.phone?.trim();
+    if (!phone) {
+      newErrors.phone = 'رقم الهاتف مطلوب';
+    } else if (!validatePhone(phone)) {
       newErrors.phone = 'رقم الهاتف غير صحيح (مثال: 01012345678)';
     }
-    
-    if (!state.customerInfo.address || state.customerInfo.address.trim().length < 10) {
-      newErrors.address = 'العنوان يجب أن يكون 10 أحرف على الأقل';
+
+    // التحقق من العنوان
+    const address = state.customerInfo.address?.trim();
+    if (!address || address.length < MIN_ADDRESS_LENGTH) {
+      newErrors.address = `العنوان يجب أن يكون ${MIN_ADDRESS_LENGTH} أحرف على الأقل`;
     }
-    
+    if (address && address.length > MAX_ADDRESS_LENGTH) {
+      newErrors.address = `العنوان طويل جداً (${MAX_ADDRESS_LENGTH} حروف كحد أقصى)`;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [state.customerInfo]);
 
-  const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = calculateShipping(total);
-  const finalTotal = total + shipping;
-  const remainingForFree = getRemainingForFreeShipping(total);
+  // ============================================
+  // معالج الـ Checkout المحسّن
+  // ============================================
+  const handleCheckout = useCallback(async () => {
+    // تحقق من Rate Limit
+    const now = Date.now();
+    if (now - lastSubmit < SUBMIT_RATE_LIMIT) {
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: {
+          message: 'يرجى الانتظار قليلاً قبل إرسال طلب آخر',
+          type: 'warning'
+        }
+      });
+      return;
+    }
 
-  const handleCheckout = async () => {
     if (!validateForm()) {
       dispatch({
         type: 'ADD_NOTIFICATION',
@@ -110,11 +163,17 @@ const CartPage = () => {
     setIsSubmitting(true);
 
     try {
+      // نظّف البيانات قبل الإرسال
+      const safeName = sanitizeText(state.customerInfo.name);
+      const safePhone = state.customerInfo.phone.trim();
+      const safeAddress = sanitizeText(state.customerInfo.address);
+
+      // بناء رسالة الطلب
       let message = `🛒 طلب جديد من ${SITE_CONFIG.name}\n\n`;
       message += `📝 بيانات العميل:\n`;
-      message += `الاسم: ${state.customerInfo.name}\n`;
-      message += `التليفون: ${state.customerInfo.phone}\n`;
-      message += `العنوان: ${state.customerInfo.address}\n\n`;
+      message += `الاسم: ${safeName}\n`;
+      message += `التليفون: ${safePhone}\n`;
+      message += `العنوان: ${safeAddress}\n\n`;
       message += `🛍️ تفاصيل الطلب:\n`;
       
       state.cart.forEach((item, index) => {
@@ -136,49 +195,67 @@ const CartPage = () => {
       });
 
       message += `💰 ملخص الطلب:\n`;
-      message += `المجموع الفرعي: ${total} جنيه\n`;
-      message += `الشحن: ${shipping === 0 ? 'مجاني ✅' : shipping + ' جنيه'}\n`;
-      message += `الإجمالي النهائي: ${finalTotal} جنيه\n\n`;
+      message += `المجموع الفرعي: ${cartTotals.total} جنيه\n`;
+      message += `الشحن: ${cartTotals.shipping === 0 ? 'مجاني ✅' : cartTotals.shipping + ' جنيه'}\n`;
+      message += `الإجمالي النهائي: ${cartTotals.finalTotal} جنيه\n\n`;
       message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
       
+      // محاولة فتح WhatsApp
       const newWindow = window.open(whatsappUrl, '_blank');
       
-      if (newWindow) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // حفظ بيانات العميل قبل مسح السلة
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // إذا تم حظر الـ popup، انسخ الرابط للحافظة
         try {
-          localStorage.setItem('kavoral_customer_info', JSON.stringify(state.customerInfo));
-        } catch (error) {
-          console.error('Error saving customer info:', error);
+          await navigator.clipboard.writeText(whatsappUrl);
+          dispatch({
+            type: 'ADD_NOTIFICATION',
+            payload: {
+              message: 'تم نسخ رابط الواتساب. الصقه في المتصفح',
+              type: 'info'
+            }
+          });
+        } catch (clipboardError) {
+          console.error('Clipboard error:', clipboardError);
+          dispatch({
+            type: 'ADD_NOTIFICATION',
+            payload: {
+              message: 'يرجى فتح الواتساب يدوياً لإرسال الطلب',
+              type: 'warning'
+            }
+          });
         }
-        
-        dispatch({ type: 'CLEAR_CART' });
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: { message: 'تم إرسال طلبك بنجاح! سنتواصل معك قريباً', type: 'success' }
-        });
-        setIsCheckout(false);
-      } else {
-        // Popup blocked - copy link
-        navigator.clipboard.writeText(whatsappUrl);
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: { message: 'تم نسخ رابط الواتساب. الصقه في المتصفح', type: 'info' }
-        });
+        setIsSubmitting(false);
+        return;
       }
-    } catch (error) {
+
+      // انتظر قليلاً قبل مسح السلة
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      dispatch({ type: 'CLEAR_CART' });
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { message: 'حدث خطأ في إرسال الطلب، حاول مرة أخرى', type: 'error' }
+        payload: { message: 'تم إرسال الطلب بنجاح! سنتواصل معك قريباً', type: 'success' }
+      });
+      
+      setIsCheckout(false);
+      setLastSubmit(Date.now());
+      
+    } catch (error) {
+      console.error('Checkout error:', error);
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: { 
+          message: 'حدث خطأ. تأكد من اتصالك بالإنترنت',
+          type: 'error' 
+        }
       });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [state, dispatch, validateForm, lastSubmit, cartTotals]);
 
   if (state.cart.length === 0) {
     return (
@@ -209,13 +286,13 @@ const CartPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {/* Free Shipping Progress */}
-            {!isEligibleForFreeShipping(total) && (
+            {!isEligibleForFreeShipping(cartTotals.total) && (
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-xl shadow-lg">
                 <div className="flex items-center gap-3 mb-3">
                   <Truck size={24} />
                   <div className="flex-1">
                     <p className="font-bold text-sm md:text-base">
-                      أضف {remainingForFree} جنيه للشحن المجاني! 🎉
+                      أضف {cartTotals.remaining} جنيه للشحن المجاني! 🎉
                     </p>
                     <p className="text-xs opacity-90">
                       وفّر {SITE_CONFIG.shipping.standardShipping} جنيه شحن
@@ -225,13 +302,13 @@ const CartPage = () => {
                 <div className="w-full bg-blue-100 rounded-full h-2.5">
                   <div 
                     className="bg-gradient-to-r from-blue-600 to-cyan-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((total / SITE_CONFIG.shipping.freeShippingThreshold) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((cartTotals.total / SITE_CONFIG.shipping.freeShippingThreshold) * 100, 100)}%` }}
                   ></div>
                 </div>
               </div>
             )}
 
-            {isEligibleForFreeShipping(total) && (
+            {isEligibleForFreeShipping(cartTotals.total) && (
               <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl shadow-lg flex items-center gap-3">
                 <div className="bg-white text-green-500 rounded-full p-2">
                   <Truck size={24} />
@@ -253,9 +330,10 @@ const CartPage = () => {
                         src={item.image} 
                         alt={item.name}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                         }}
                       />
                     ) : null}
@@ -294,6 +372,7 @@ const CartPage = () => {
                         <button
                           onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
                           className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          aria-label="تقليل الكمية"
                         >
                           <Minus size={14} />
                         </button>
@@ -301,6 +380,7 @@ const CartPage = () => {
                         <button
                           onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
                           className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          aria-label="زيادة الكمية"
                         >
                           <Plus size={14} />
                         </button>
@@ -341,19 +421,19 @@ const CartPage = () => {
             <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
               <div className="flex justify-between text-base md:text-lg">
                 <span>المجموع الفرعي:</span>
-                <span className="font-bold">{total} جنيه</span>
+                <span className="font-bold">{cartTotals.total} جنيه</span>
               </div>
               
               <div className="flex justify-between text-sm md:text-base">
                 <span>الشحن:</span>
                 <span className="font-bold">
-                  {shipping === 0 ? (
+                  {cartTotals.shipping === 0 ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <Truck size={16} />
                       مجاني
                     </span>
                   ) : (
-                    `${shipping} جنيه`
+                    `${cartTotals.shipping} جنيه`
                   )}
                 </span>
               </div>
@@ -362,7 +442,7 @@ const CartPage = () => {
               
               <div className="flex justify-between text-lg md:text-xl font-bold text-green-600">
                 <span>الإجمالي:</span>
-                <span>{finalTotal} جنيه</span>
+                <span>{cartTotals.finalTotal} جنيه</span>
               </div>
             </div>
 
@@ -393,6 +473,7 @@ const CartPage = () => {
                       });
                       if (errors.name) setErrors({...errors, name: ''});
                     }}
+                    maxLength={MAX_NAME_LENGTH}
                     className={`w-full p-2 md:p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base ${
                       errors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -431,6 +512,7 @@ const CartPage = () => {
                       if (errors.address) setErrors({...errors, address: ''});
                     }}
                     rows="3"
+                    maxLength={MAX_ADDRESS_LENGTH}
                     className={`w-full p-2 md:p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm md:text-base ${
                       errors.address ? 'border-red-500' : 'border-gray-300'
                     }`}

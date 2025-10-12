@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Heart, Star, Plus, Minus, ShoppingCart, Eye, Zap, TrendingUp } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { Badge } from '../common';
+import { CART } from '../../constants';
+import { validateQuantity } from '../../utils/helpers';
+
+const MAX_QUANTITY_PER_ITEM = 100;
 
 const ProductCard = ({ product }) => {
   const { state, dispatch, toggleWishlist, navigateTo } = useAppContext();
@@ -9,14 +13,22 @@ const ProductCard = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const isInWishlist = state.wishlist.some(item => item.id === product.id);
-  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  // استخدم useMemo لتحسين الأداء
+  const isInWishlist = useMemo(
+    () => state.wishlist.some(item => item.id === product.id),
+    [state.wishlist, product.id]
+  );
 
-  const handleUpdateQuantity = (change) => {
-    setLocalQuantity(prev => Math.max(0, prev + change));
-  };
+  const hasDiscount = useMemo(
+    () => product.originalPrice && product.originalPrice > product.price,
+    [product.originalPrice, product.price]
+  );
 
-  const handleAddToCart = async () => {
+  const handleUpdateQuantity = useCallback((change) => {
+    setLocalQuantity(prev => validateQuantity(prev + change, CART.MAX_QUANTITY_PER_ITEM));
+  }, []);
+
+  const handleAddToCart = useCallback(async () => {
     if (localQuantity <= 0) {
       dispatch({
         type: 'ADD_NOTIFICATION',
@@ -35,7 +47,9 @@ const ProductCard = ({ product }) => {
 
     setIsAdding(true);
 
-    setTimeout(() => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       dispatch({
         type: 'ADD_TO_CART',
         payload: { ...product, quantity: localQuantity }
@@ -50,19 +64,26 @@ const ProductCard = ({ product }) => {
       });
 
       setLocalQuantity(0);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: { message: 'حدث خطأ أثناء إضافة المنتج', type: 'error' }
+      });
+    } finally {
       setIsAdding(false);
-    }, 400);
-  };
+    }
+  }, [localQuantity, product, dispatch]);
 
-  const handleViewDetails = () => {
+  const handleViewDetails = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: product });
     navigateTo('product-details');
-  };
+  }, [product, dispatch, navigateTo]);
 
-  const handleToggleWishlist = (e) => {
+  const handleToggleWishlist = useCallback((e) => {
     e.stopPropagation();
     toggleWishlist(product);
-  };
+  }, [product, toggleWishlist]);
 
   return (
     <div 
@@ -90,10 +111,12 @@ const ProductCard = ({ product }) => {
               <img 
                 src={product.image} 
                 alt={product.name}
+                loading="lazy"
+                decoding="async"
                 className={`relative z-10 w-full h-full object-cover transition-transform duration-500 ${isHovered ? 'scale-110' : 'scale-100'}`}
                 onError={(e) => {
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                 }}
               />
             ) : null}
@@ -145,6 +168,7 @@ const ProductCard = ({ product }) => {
                   ? 'bg-red-500 text-white scale-110' 
                   : 'bg-white/90 text-gray-400 hover:text-red-500 hover:bg-white hover:scale-110'
               }`}
+              aria-label={isInWishlist ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
             >
               <Heart size={20} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2.5} />
             </button>
@@ -220,6 +244,7 @@ const ProductCard = ({ product }) => {
                 onClick={() => handleUpdateQuantity(-1)}
                 disabled={localQuantity <= 0}
                 className="w-9 h-9 rounded-xl bg-white border-2 border-gray-200 hover:border-green-500 disabled:border-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                aria-label="تقليل الكمية"
               >
                 <Minus size={16} className={localQuantity <= 0 ? 'text-gray-300' : 'text-gray-600'} />
               </button>
@@ -228,8 +253,9 @@ const ProductCard = ({ product }) => {
               
               <button
                 onClick={() => handleUpdateQuantity(1)}
-                disabled={!product.inStock}
+                disabled={!product.inStock || localQuantity >= MAX_QUANTITY_PER_ITEM}
                 className="w-9 h-9 rounded-xl bg-white border-2 border-gray-200 hover:border-green-500 disabled:border-gray-100 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-sm hover:shadow-md"
+                aria-label="زيادة الكمية"
               >
                 <Plus size={16} className="text-gray-600" />
               </button>
@@ -250,6 +276,7 @@ const ProductCard = ({ product }) => {
           <button
             onClick={handleViewDetails}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-xl transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+            aria-label="عرض التفاصيل"
           >
             <Eye size={18} />
             تفاصيل
@@ -265,6 +292,7 @@ const ProductCard = ({ product }) => {
                   ? 'bg-gray-300 cursor-not-allowed text-gray-500'
                   : 'bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600 hover:shadow-xl transform hover:scale-105'
             }`}
+            aria-label={product.inStock ? 'أضف للسلة' : 'غير متوفر'}
           >
             {isAdding ? (
               <>

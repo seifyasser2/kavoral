@@ -5,7 +5,10 @@ import { getProductById } from './products';
 // ============================================
 const calculateBundlePrice = (originalPrice, discountPercentage) => {
   if (!originalPrice || discountPercentage < 0) return originalPrice;
-  return Math.round(originalPrice * (1 - discountPercentage / 100));
+  
+  // تأكد أن الخصم لا يتجاوز 100%
+  const effectiveDiscount = Math.min(Math.max(discountPercentage, 0), 100);
+  return Math.round(originalPrice * (1 - effectiveDiscount / 100));
 };
 
 // ============================================
@@ -13,13 +16,15 @@ const calculateBundlePrice = (originalPrice, discountPercentage) => {
 // ============================================
 const calculateSavings = (originalPrice, discountPercentage) => {
   if (!originalPrice || discountPercentage <= 0) return 0;
-  return Math.round(originalPrice * (discountPercentage / 100));
+  
+  const effectiveDiscount = Math.min(Math.max(discountPercentage, 0), 100);
+  return Math.round(originalPrice * (effectiveDiscount / 100));
 };
 
 // ============================================
-// الخصم العام للعروض - غيره هنا يتطبق على كل العروض
+// الخصم العام للعروض - استخدم أحده فقط
 // ============================================
-export const GLOBAL_BUNDLE_DISCOUNT = 50; // غير الرقم ده للخصم على كل العروض
+export const GLOBAL_BUNDLE_DISCOUNT = 50;
 
 // ============================================
 // بيانات العروض الخام
@@ -100,7 +105,7 @@ const bundlesRawData = [
 ];
 
 // ============================================
-// حساب الأسعار تلقائياً
+// حساب الأسعار تلقائياً - بدون جمع الخصومات
 // ============================================
 export const BUNDLE_OFFERS = bundlesRawData.map(bundle => {
   // ✅ إذا الخصم الخاص = 0، استخدم الخصم العام
@@ -109,14 +114,17 @@ export const BUNDLE_OFFERS = bundlesRawData.map(bundle => {
     ? bundle.discountPercentage
     : GLOBAL_BUNDLE_DISCOUNT;
   
-  const finalPrice = calculateBundlePrice(bundle.originalPrice, effectiveDiscount);
-  const savings = calculateSavings(bundle.originalPrice, effectiveDiscount);
+  // تأكد أن الخصم لا يتجاوز 100%
+  const totalDiscount = Math.min(Math.max(effectiveDiscount, 0), 100);
+  
+  const finalPrice = calculateBundlePrice(bundle.originalPrice, totalDiscount);
+  const savings = calculateSavings(bundle.originalPrice, totalDiscount);
   
   return {
     ...bundle,
     bundlePrice: finalPrice,
     savings: savings,
-    totalDiscountPercentage: effectiveDiscount
+    totalDiscountPercentage: totalDiscount
   };
 });
 
@@ -157,6 +165,40 @@ export const calculateBundleOriginalPrice = (bundle) => {
     const product = getProductById(productId);
     return total + (product ? product.originalPrice : 0);
   }, 0);
+};
+
+// ============================================
+// دالة للحصول على إجمالي السعر الحالي للعرض
+// ============================================
+export const calculateBundleCurrentPrice = (bundle) => {
+  if (!bundle || !bundle.products) return 0;
+  
+  return bundle.products.reduce((total, productId) => {
+    const product = getProductById(productId);
+    return total + (product ? product.price : 0);
+  }, 0);
+};
+
+// ============================================
+// دالة للتحقق من صحة العرض
+// ============================================
+export const validateBundle = (bundle) => {
+  if (!bundle) return false;
+  if (!bundle.id || !bundle.name || !bundle.products) return false;
+  if (bundle.products.length === 0) return false;
+  if (bundle.bundlePrice < 0) return false;
+  if (!validateBundleProducts(bundle)) return false;
+  
+  return true;
+};
+
+// ============================================
+// دالة للعثور على أفضل عرض (الأكثر توفيراً)
+// ============================================
+export const getBestBundle = () => {
+  return BUNDLE_OFFERS.reduce((best, current) => {
+    return current.savings > (best.savings || 0) ? current : best;
+  }, BUNDLE_OFFERS[0] || null);
 };
 
 export default BUNDLE_OFFERS;

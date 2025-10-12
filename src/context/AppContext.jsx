@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import { appReducer, initialState } from './AppReducer';
 
 // ============================================
@@ -18,75 +18,103 @@ export const useAppContext = () => {
 };
 
 // ============================================
-// LOCAL STORAGE KEYS
+// STORAGE HELPER - دالة آمنة للتعامل مع localStorage
 // ============================================
 const STORAGE_KEYS = {
   CART: 'kavoral_cart',
   WISHLIST: 'kavoral_wishlist',
-  QUANTITIES: 'kavoral_quantities',
   CUSTOMER_INFO: 'kavoral_customer_info'
 };
 
+/**
+ * التحقق من توفر localStorage بشكل آمن
+ */
+const isStorageAvailable = () => {
+  try {
+    const test = '__localStorage_test__';
+    if (typeof localStorage === 'undefined') return false;
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (e) {
+    console.warn('localStorage is not available:', e);
+    return false;
+  }
+};
+
+/**
+ * حفظ البيانات في localStorage بشكل آمن
+ */
+const saveToStorage = (key, data) => {
+  if (!isStorageAvailable()) return;
+  
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error(`Error saving ${key} to localStorage:`, error);
+  }
+};
+
+/**
+ * استرجاع البيانات من localStorage بشكل آمن
+ */
+const getFromStorage = (key, defaultValue = null) => {
+  if (!isStorageAvailable()) return defaultValue;
+  
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : defaultValue;
+  } catch (error) {
+    console.error(`Error reading ${key} from localStorage:`, error);
+    return defaultValue;
+  }
+};
+
 // ============================================
-// APP PROVIDER
+// APP PROVIDER - مع localStorage آمن
 // ============================================
 export const AppProvider = ({ children }) => {
   // دالة لتحميل البيانات من localStorage
   const loadState = () => {
     try {
-      const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
-      const savedWishlist = localStorage.getItem(STORAGE_KEYS.WISHLIST);
-      const savedQuantities = localStorage.getItem(STORAGE_KEYS.QUANTITIES);
-      const savedCustomerInfo = localStorage.getItem(STORAGE_KEYS.CUSTOMER_INFO);
+      const savedCart = getFromStorage(STORAGE_KEYS.CART, []);
+      const savedWishlist = getFromStorage(STORAGE_KEYS.WISHLIST, []);
+      const savedCustomerInfo = getFromStorage(STORAGE_KEYS.CUSTOMER_INFO, initialState.customerInfo);
       
+      // تحقق من صحة البيانات
       return {
         ...initialState,
-        cart: savedCart ? JSON.parse(savedCart) : [],
-        wishlist: savedWishlist ? JSON.parse(savedWishlist) : [],
-        quantities: savedQuantities ? JSON.parse(savedQuantities) : {},
-        customerInfo: savedCustomerInfo ? JSON.parse(savedCustomerInfo) : initialState.customerInfo
+        cart: Array.isArray(savedCart) ? savedCart : [],
+        wishlist: Array.isArray(savedWishlist) ? savedWishlist : [],
+        customerInfo: savedCustomerInfo || initialState.customerInfo
       };
     } catch (error) {
-      console.error('Error loading from localStorage:', error);
+      console.error('Error loading state from storage:', error);
       return initialState;
     }
   };
 
   const [state, dispatch] = useReducer(appReducer, initialState, loadState);
-  
+
   // ============================================
-  // SAVE TO LOCAL STORAGE
+  // حفظ السلة في localStorage
   // ============================================
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(state.cart));
-    } catch (error) {
-      console.error('Error saving cart to localStorage:', error);
-    }
+    saveToStorage(STORAGE_KEYS.CART, state.cart);
   }, [state.cart]);
 
+  // ============================================
+  // حفظ المفضلة في localStorage
+  // ============================================
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.WISHLIST, JSON.stringify(state.wishlist));
-    } catch (error) {
-      console.error('Error saving wishlist to localStorage:', error);
-    }
+    saveToStorage(STORAGE_KEYS.WISHLIST, state.wishlist);
   }, [state.wishlist]);
 
+  // ============================================
+  // حفظ بيانات العميل في localStorage
+  // ============================================
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.QUANTITIES, JSON.stringify(state.quantities));
-    } catch (error) {
-      console.error('Error saving quantities to localStorage:', error);
-    }
-  }, [state.quantities]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.CUSTOMER_INFO, JSON.stringify(state.customerInfo));
-    } catch (error) {
-      console.error('Error saving customer info to localStorage:', error);
-    }
+    saveToStorage(STORAGE_KEYS.CUSTOMER_INFO, state.customerInfo);
   }, [state.customerInfo]);
 
   // ============================================
@@ -145,6 +173,39 @@ export const AppProvider = ({ children }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // معالجة الأخطاء
+  const setError = useCallback((error) => {
+    dispatch({ type: 'SET_ERROR', payload: error });
+  }, []);
+
+  const clearError = useCallback(() => {
+    dispatch({ type: 'CLEAR_ERROR' });
+  }, []);
+
+  /**
+   * مسح جميع البيانات المحفوظة
+   */
+  const clearAllStorage = useCallback(() => {
+    if (isStorageAvailable()) {
+      try {
+        localStorage.removeItem(STORAGE_KEYS.CART);
+        localStorage.removeItem(STORAGE_KEYS.WISHLIST);
+        localStorage.removeItem(STORAGE_KEYS.CUSTOMER_INFO);
+        
+        dispatch({ type: 'CLEAR_CART' });
+        dispatch({ type: 'CLEAR_WISHLIST' });
+        dispatch({ type: 'CLEAR_CUSTOMER_INFO' });
+        
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: { message: 'تم مسح جميع البيانات المحفوظة', type: 'info' }
+        });
+      } catch (error) {
+        console.error('Error clearing storage:', error);
+      }
+    }
+  }, []);
+
   // ============================================
   // CONTEXT VALUE
   // ============================================
@@ -154,7 +215,10 @@ export const AppProvider = ({ children }) => {
     // Helper functions
     addToCart,
     toggleWishlist,
-    navigateTo
+    navigateTo,
+    setError,
+    clearError,
+    clearAllStorage
   };
   
   return (

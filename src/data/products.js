@@ -1,11 +1,27 @@
 import { BOTTLE_SIZES } from './config';
 
 // ============================================
+// دالة تنظيف البيانات - حماية من XSS
+// ============================================
+const sanitizeText = (text) => {
+  if (typeof text !== 'string') return '';
+  
+  return text
+    .replace(/[<>\"'`]/g, '') // احذف الأحرف الخطرة
+    .replace(/\n{2,}/g, '\n') // حد من الأسطر الفارغة
+    .trim()
+    .substring(0, 1000); // حد الطول
+};
+
+// ============================================
 // دالة لحساب السعر بعد الخصم تلقائياً
 // ============================================
 const calculateDiscountedPrice = (originalPrice, discountPercentage) => {
   if (!originalPrice || discountPercentage < 0) return originalPrice;
-  return Math.round(originalPrice * (1 - discountPercentage / 100));
+  
+  // تأكد أن الخصم لا يتجاوز 100%
+  const effectiveDiscount = Math.min(Math.max(discountPercentage, 0), 100);
+  return Math.round(originalPrice * (1 - effectiveDiscount / 100));
 };
 
 // ============================================
@@ -13,13 +29,15 @@ const calculateDiscountedPrice = (originalPrice, discountPercentage) => {
 // ============================================
 const calculateSavings = (originalPrice, discountPercentage) => {
   if (!originalPrice || discountPercentage <= 0) return 0;
-  return Math.round(originalPrice * (discountPercentage / 100));
+  
+  const effectiveDiscount = Math.min(Math.max(discountPercentage, 0), 100);
+  return Math.round(originalPrice * (effectiveDiscount / 100));
 };
 
 // ============================================
-// الخصم العام - غيره هنا يتطبق على كل المنتجات
+// الخصم العام - استخدم أحده فقط
 // ============================================
-export const GLOBAL_DISCOUNT = 50; // غير الرقم ده للخصم (مثال: 10 = خصم 10%)
+export const GLOBAL_DISCOUNT = 40;
 
 // ============================================
 // بيانات المنتجات الخام
@@ -33,7 +51,7 @@ const productsRawData = [
     discountPercentage: 0,
     size: BOTTLE_SIZES.medium,
     image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=400&h=400&fit=crop',
-    imageAlt: '🥥', // Emoji backup
+    imageAlt: '🥥',
     categories: ['hair', 'skin'],
     tags: ['طبيعي', 'للشعر', 'للبشرة', 'مرطب'],
     inStock: true,
@@ -190,15 +208,33 @@ const productsRawData = [
 ];
 
 // ============================================
-// حساب الأسعار تلقائياً
+// حساب الأسعار تلقائياً - بدون جمع الخصومات
 // ============================================
 export const PRODUCTS_DATA = productsRawData.map(product => {
-  const totalDiscount = product.discountPercentage + GLOBAL_DISCOUNT;
-  const finalPrice = calculateDiscountedPrice(product.originalPrice, totalDiscount);
-  const savings = calculateSavings(product.originalPrice, totalDiscount);
+  // استخدم أحد الخصومات فقط (الخاص أم العام)
+  const effectiveDiscount = product.discountPercentage > 0
+    ? product.discountPercentage
+    : GLOBAL_DISCOUNT;
   
+  // تأكد أن الخصم لا يتجاوز 100%
+  const totalDiscount = Math.min(Math.max(effectiveDiscount, 0), 100);
+  
+  // تأكد من الأسعار الإيجابية
+  const finalPrice = Math.max(
+    Math.round(product.originalPrice * (1 - totalDiscount / 100)),
+    0
+  );
+  
+  const savings = Math.max(
+    Math.round(product.originalPrice * (totalDiscount / 100)),
+    0
+  );
+  
+  // نظّف البيانات النصية
   return {
     ...product,
+    name: sanitizeText(product.name),
+    description: sanitizeText(product.description),
     price: finalPrice,
     savings: savings,
     totalDiscountPercentage: totalDiscount,
@@ -247,6 +283,16 @@ export const searchProducts = (searchTerm) => {
 // ============================================
 export const filterByPriceRange = (products, minPrice, maxPrice) => {
   return products.filter(p => p.price >= minPrice && p.price <= maxPrice);
+};
+
+// ============================================
+// دالة التحقق من صحة المنتج
+// ============================================
+export const validateProduct = (product) => {
+  if (!product) return false;
+  if (!product.id || !product.name || product.price === undefined) return false;
+  if (product.price < 0 || product.originalPrice < 0) return false;
+  return true;
 };
 
 export default PRODUCTS_DATA;
