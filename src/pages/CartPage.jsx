@@ -1,16 +1,13 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { 
   ShoppingCart, Plus, Minus, Trash2, Send, User, 
-  Gift, Truck, MessageCircle, Package
+  Gift, Truck, MessageCircle, Package, Mail, Phone,
+  MapPin, Clock, Check, AlertCircle, X, ChevronDown, Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG, calculateShipping, isEligibleForFreeShipping, getRemainingForFreeShipping } from '../data/config';
-import { getProductById } from '../data/products';
 import { Badge, LoadingSpinner, EmptyState, ConfirmModal } from '../components/common';
 
-// ============================================
-// ثوابت التحقق
-// ============================================
 const MIN_NAME_LENGTH = 3;
 const MAX_NAME_LENGTH = 100;
 const MIN_ADDRESS_LENGTH = 10;
@@ -19,30 +16,45 @@ const SUBMIT_RATE_LIMIT = 5000;
 const MAX_QUANTITY_PER_ITEM = 100;
 const MIN_QUANTITY = 1;
 
-// ============================================
-// دالة تنظيف البيانات - حماية من XSS
-// ============================================
+const EGYPTIAN_GOVERNORATES = [
+  { id: 'cairo', name: 'القاهرة', emoji: '🏙️' },
+  { id: 'giza', name: 'الجيزة', emoji: '🗿' },
+  { id: 'alexandria', name: 'الإسكندرية', emoji: '🌊' },
+  { id: 'qalioubia', name: 'القليوبية', emoji: '🏡' },
+  { id: 'sharqia', name: 'الشرقية', emoji: '🏜️' },
+  { id: 'monufia', name: 'المنوفية', emoji: '🌾' },
+  { id: 'dakahlia', name: 'الدقهلية', emoji: '🌳' },
+  { id: 'damietta', name: 'دمياط', emoji: '🐟' },
+  { id: 'beheira', name: 'البحيرة', emoji: '💧' },
+  { id: 'kafr_elsheikh', name: 'كفر الشيخ', emoji: '🌾' },
+  { id: 'fayoum', name: 'الفيوم', emoji: '💎' },
+  { id: 'beni_suef', name: 'بني سويف', emoji: '⛰️' },
+  { id: 'minya', name: 'المنيا', emoji: '🏛️' },
+  { id: 'assiut', name: 'أسيوط', emoji: '🗻' },
+  { id: 'sohag', name: 'سوهاج', emoji: '🏺' },
+  { id: 'qena', name: 'قنا', emoji: '⚱️' },
+  { id: 'luxor', name: 'الأقصر', emoji: '🏛️' },
+  { id: 'aswan', name: 'أسوان', emoji: '☀️' },
+  { id: 'red_sea', name: 'البحر الأحمر', emoji: '🏖️' },
+  { id: 'new_valley', name: 'الوادي الجديد', emoji: '🏜️' },
+  { id: 'north_sinai', name: 'شمال سيناء', emoji: '⛰️' },
+  { id: 'south_sinai', name: 'جنوب سيناء', emoji: '🏝️' },
+  { id: 'port_said', name: 'بورسعيد', emoji: '⚓' },
+  { id: 'ismailia', name: 'الإسماعيلية', emoji: '🌉' },
+  { id: 'suez', name: 'السويس', emoji: '🚢' },
+  { id: 'matrouh', name: 'مطروح', emoji: '🏜️' }
+];
+
 const sanitizeText = (text) => {
   if (typeof text !== 'string') return '';
-  
-  return text
-    .replace(/[<>\"'`]/g, '')
-    .replace(/\n{2,}/g, '\n')
-    .trim()
-    .substring(0, 1000);
+  return text.replace(/[<>\"'`]/g, '').replace(/\n{2,}/g, '\n').trim().substring(0, 1000);
 };
 
-// ============================================
-// دالة التحقق من الهاتف
-// ============================================
 const validatePhone = (phone) => {
   const phoneRegex = /^(\+?20|0)?1[0125]\d{8}$/;
   return phoneRegex.test(phone?.trim());
 };
 
-// ============================================
-// دالة التحقق من الكمية
-// ============================================
 const validateQuantity = (quantity) => {
   return Math.max(MIN_QUANTITY, Math.min(MAX_QUANTITY_PER_ITEM, quantity));
 };
@@ -54,8 +66,16 @@ const CartPage = () => {
   const [errors, setErrors] = useState({});
   const [itemToDelete, setItemToDelete] = useState(null);
   const [lastSubmit, setLastSubmit] = useState(0);
+  const [governorateOpen, setGovernorateOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    governorate: '',
+    address: '',
+    notes: ''
+  });
 
-  // حساب الإجمالي باستخدام useMemo
   const cartTotals = useMemo(() => {
     const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const shipping = calculateShipping(total);
@@ -67,7 +87,6 @@ const CartPage = () => {
 
   const updateCartQuantity = useCallback((id, quantity) => {
     const validatedQuantity = validateQuantity(quantity);
-    
     if (validatedQuantity <= 0) {
       const item = state.cart.find(i => i.id === id);
       setItemToDelete(item);
@@ -90,64 +109,45 @@ const CartPage = () => {
     }
   }, [itemToDelete, dispatch]);
 
-  const cancelDelete = useCallback(() => {
-    setItemToDelete(null);
-  }, []);
-
-  const removeFromCart = useCallback((id, name) => {
-    const item = state.cart.find(i => i.id === id);
-    setItemToDelete(item);
-  }, [state.cart]);
-
-  // ============================================
-  // التحقق من النموذج المحسّن
-  // ============================================
   const validateForm = useCallback(() => {
     const newErrors = {};
 
-    // التحقق من الاسم
-    const name = state.customerInfo.name?.trim();
-    if (!name || name.length < MIN_NAME_LENGTH) {
-      newErrors.name = `الاسم يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
-    }
-    if (name && name.length > MAX_NAME_LENGTH) {
-      newErrors.name = `الاسم طويل جداً (${MAX_NAME_LENGTH} حروف كحد أقصى)`;
+    const firstName = formData.firstName?.trim();
+    if (!firstName || firstName.length < MIN_NAME_LENGTH) {
+      newErrors.firstName = `الاسم الأول يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
     }
 
-    // التحقق من الهاتف
-    const phone = state.customerInfo.phone?.trim();
+    const lastName = formData.lastName?.trim();
+    if (!lastName || lastName.length < MIN_NAME_LENGTH) {
+      newErrors.lastName = `الاسم الأخير يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
+    }
+
+    const phone = formData.phone?.trim();
     if (!phone) {
       newErrors.phone = 'رقم الهاتف مطلوب';
     } else if (!validatePhone(phone)) {
       newErrors.phone = 'رقم الهاتف غير صحيح (مثال: 01012345678)';
     }
 
-    // التحقق من العنوان
-    const address = state.customerInfo.address?.trim();
+    if (!formData.governorate) {
+      newErrors.governorate = 'يرجى اختيار محافظة';
+    }
+
+    const address = formData.address?.trim();
     if (!address || address.length < MIN_ADDRESS_LENGTH) {
       newErrors.address = `العنوان يجب أن يكون ${MIN_ADDRESS_LENGTH} أحرف على الأقل`;
-    }
-    if (address && address.length > MAX_ADDRESS_LENGTH) {
-      newErrors.address = `العنوان طويل جداً (${MAX_ADDRESS_LENGTH} حروف كحد أقصى)`;
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [state.customerInfo]);
+  }, [formData]);
 
-  // ============================================
-  // معالج الـ Checkout المحسّن
-  // ============================================
   const handleCheckout = useCallback(async () => {
-    // تحقق من Rate Limit
     const now = Date.now();
     if (now - lastSubmit < SUBMIT_RATE_LIMIT) {
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: {
-          message: 'يرجى الانتظار قليلاً قبل إرسال طلب آخر',
-          type: 'warning'
-        }
+        payload: { message: 'يرجى الانتظار قليلاً قبل إرسال طلب آخر', type: 'warning' }
       });
       return;
     }
@@ -163,108 +163,92 @@ const CartPage = () => {
     setIsSubmitting(true);
 
     try {
-      // نظّف البيانات قبل الإرسال
-      const safeName = sanitizeText(state.customerInfo.name);
-      const safePhone = state.customerInfo.phone.trim();
-      const safeAddress = sanitizeText(state.customerInfo.address);
+      const firstName = sanitizeText(formData.firstName);
+      const lastName = sanitizeText(formData.lastName);
+      const phone = formData.phone.trim();
+      const governorateName = EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name || formData.governorate;
+      const address = sanitizeText(formData.address);
+      const notes = sanitizeText(formData.notes);
 
-      // بناء رسالة الطلب
-      let message = `🛒 طلب جديد من ${SITE_CONFIG.name}\n\n`;
-      message += `📝 بيانات العميل:\n`;
-      message += `الاسم: ${safeName}\n`;
-      message += `التليفون: ${safePhone}\n`;
-      message += `العنوان: ${safeAddress}\n\n`;
-      message += `🛍️ تفاصيل الطلب:\n`;
+      let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
+      message += `📝 *بيانات العميل:*\n`;
+      message += `الاسم: *${firstName} ${lastName}*\n`;
+      message += `التليفون: *${phone}*\n`;
+      message += `المحافظة: *${governorateName}*\n`;
+      message += `العنوان: *${address}*\n`;
+      if (notes) {
+        message += `الملاحظات: ${notes}\n`;
+      }
+      message += `\n🛍️ *تفاصيل الطلب:*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
       
       state.cart.forEach((item, index) => {
-        message += `${index + 1}. ${item.name}\n`;
-        if (item.isBundle) {
-          message += `   📦 عرض خاص يحتوي على:\n`;
-          item.bundleProducts?.forEach(productId => {
-            const product = getProductById(productId);
-            if (product) {
-              message += `      • ${product.name}\n`;
-            }
-          });
-        } else {
-          message += `   الحجم: ${item.size}\n`;
-        }
+        message += `\n${index + 1}. *${item.name}*\n`;
+        message += `   الحجم: ${item.size}\n`;
         message += `   الكمية: ${item.quantity}\n`;
         message += `   السعر: ${item.price} جنيه\n`;
-        message += `   المجموع: ${item.price * item.quantity} جنيه\n\n`;
+        message += `   المجموع: *${item.price * item.quantity} جنيه*\n`;
       });
 
-      message += `💰 ملخص الطلب:\n`;
+      message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `\n💰 *ملخص الطلب:*\n`;
       message += `المجموع الفرعي: ${cartTotals.total} جنيه\n`;
-      message += `الشحن: ${cartTotals.shipping === 0 ? 'مجاني ✅' : cartTotals.shipping + ' جنيه'}\n`;
-      message += `الإجمالي النهائي: ${cartTotals.finalTotal} جنيه\n\n`;
-      message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}`;
+      message += `الشحن: ${cartTotals.shipping === 0 ? '🎉 مجاني' : cartTotals.shipping + ' جنيه'}\n`;
+      message += `─────────────────────\n`;
+      message += `الإجمالي النهائي: *${cartTotals.finalTotal} جنيه*\n\n`;
+      message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}\n`;
+      message += `سيتم التواصل معك قريباً`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
       
-      // محاولة فتح WhatsApp
       const newWindow = window.open(whatsappUrl, '_blank');
       
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-        // إذا تم حظر الـ popup، انسخ الرابط للحافظة
+      if (!newWindow || newWindow.closed) {
         try {
           await navigator.clipboard.writeText(whatsappUrl);
           dispatch({
             type: 'ADD_NOTIFICATION',
-            payload: {
-              message: 'تم نسخ رابط الواتساب. الصقه في المتصفح',
-              type: 'info'
-            }
+            payload: { message: 'تم نسخ رابط الواتساب', type: 'info' }
           });
-        } catch (clipboardError) {
-          console.error('Clipboard error:', clipboardError);
-          dispatch({
-            type: 'ADD_NOTIFICATION',
-            payload: {
-              message: 'يرجى فتح الواتساب يدوياً لإرسال الطلب',
-              type: 'warning'
-            }
-          });
+        } catch (e) {
+          console.error('Clipboard error:', e);
         }
         setIsSubmitting(false);
         return;
       }
 
-      // انتظر قليلاً قبل مسح السلة
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       dispatch({ type: 'CLEAR_CART' });
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { message: 'تم إرسال الطلب بنجاح! سنتواصل معك قريباً', type: 'success' }
+        payload: { message: '✅ تم إرسال الطلب بنجاح! سنتواصل معك قريباً', type: 'success' }
       });
       
       setIsCheckout(false);
+      setFormData({ firstName: '', lastName: '', phone: '', governorate: '', address: '', notes: '' });
       setLastSubmit(Date.now());
       
     } catch (error) {
       console.error('Checkout error:', error);
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { 
-          message: 'حدث خطأ. تأكد من اتصالك بالإنترنت',
-          type: 'error' 
-        }
+        payload: { message: 'حدث خطأ. تأكد من اتصالك بالإنترنت', type: 'error' }
       });
     } finally {
       setIsSubmitting(false);
     }
-  }, [state, dispatch, validateForm, lastSubmit, cartTotals]);
+  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotals]);
 
   if (state.cart.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
         <div className="container mx-auto px-4">
           <EmptyState 
             icon={ShoppingCart}
             title="السلة فارغة"
-            description="لم تقم بإضافة أي منتجات للسلة بعد. ابدأ التسوق واكتشف مجموعتنا المميزة من الزيوت الطبيعية"
+            description="لم تقم بإضافة أي منتجات للسلة بعد. ابدأ التسوق واكتشف مجموعتنا المميزة"
             actionLabel="ابدأ التسوق"
             onAction={() => navigateTo('products')}
           />
@@ -274,57 +258,72 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 md:py-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-6 md:py-8">
       <div className="container mx-auto px-4">
-        <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-          <ShoppingCart size={32} className="text-green-600" />
-          <h1 className="text-2xl md:text-4xl font-bold text-gray-800">سلة التسوق</h1>
-          <Badge variant="success">{state.cart.length} منتج</Badge>
+        {/* Page Header */}
+        <div className="mb-6 md:mb-8 animate-fade-in-down">
+          <div className="flex items-center gap-3 md:gap-4 mb-4">
+            <div className="bg-gradient-to-br from-green-500 to-teal-500 p-3 rounded-2xl shadow-lg animate-pulse-scale">
+              <ShoppingCart className="text-white" size={28} />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                سلة التسوق
+              </h1>
+              <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                <Sparkles size={14} />
+                أكمل طلبك بسهولة وأمان
+              </p>
+            </div>
+            <Badge variant="success" className="text-sm md:text-base px-3 md:px-4 py-1.5 md:py-2">{state.cart.length} منتج</Badge>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {/* Free Shipping Progress */}
-            {!isEligibleForFreeShipping(cartTotals.total) && (
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-xl shadow-lg">
+            {!isEligibleForFreeShipping(cartTotals.total) ? (
+              <div className="bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 text-white p-4 md:p-5 rounded-2xl shadow-xl animate-gradient-x">
                 <div className="flex items-center gap-3 mb-3">
-                  <Truck size={24} />
-                  <div className="flex-1">
-                    <p className="font-bold text-sm md:text-base">
-                      أضف {cartTotals.remaining} جنيه للشحن المجاني! 🎉
-                    </p>
-                    <p className="text-xs opacity-90">
-                      وفّر {SITE_CONFIG.shipping.standardShipping} جنيه شحن
-                    </p>
+                  <Truck size={24} className="flex-shrink-0 animate-bounce-gentle" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm md:text-base">أضف {cartTotals.remaining} ج للشحن المجاني! 🎉</p>
+                    <p className="text-xs opacity-90">وفّر {SITE_CONFIG.shipping.standardShipping} جنيه</p>
                   </div>
                 </div>
-                <div className="w-full bg-blue-100 rounded-full h-2.5">
+                <div className="relative w-full bg-blue-100/30 rounded-full h-3 overflow-hidden">
                   <div 
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((cartTotals.total / SITE_CONFIG.shipping.freeShippingThreshold) * 100, 100)}%` }}
+                    className="absolute inset-0 bg-gradient-to-r from-white/50 to-transparent animate-shimmer-strong"
+                  ></div>
+                  <div 
+                    className="relative bg-gradient-to-r from-white to-blue-100 h-3 rounded-full transition-all duration-700 shadow-lg"
+                    style={{ width: `${Math.min((cartTotals.total / 500) * 100, 100)}%` }}
                   ></div>
                 </div>
               </div>
-            )}
-
-            {isEligibleForFreeShipping(cartTotals.total) && (
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl shadow-lg flex items-center gap-3">
-                <div className="bg-white text-green-500 rounded-full p-2">
-                  <Truck size={24} />
+            ) : (
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 md:p-5 rounded-2xl shadow-xl flex items-center gap-3 animate-scale-in">
+                <div className="bg-white text-green-500 rounded-full p-3 shadow-lg animate-bounce-gentle">
+                  <Check size={24} />
                 </div>
                 <div>
-                  <p className="font-bold">شحن مجاني! 🎉</p>
-                  <p className="text-sm opacity-90">لقد حصلت على الشحن المجاني</p>
+                  <p className="font-bold text-base md:text-lg">شحن مجاني! 🎉</p>
+                  <p className="text-sm opacity-90">لقد حصلت على توصيل مجاني</p>
                 </div>
               </div>
             )}
 
             {/* Cart Items */}
-            {state.cart.map(item => (
-              <div key={item.id} className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                <div className="flex gap-4">
-                  <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {state.cart.map((item, index) => (
+              <div 
+                key={item.id} 
+                className="bg-white p-4 md:p-5 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-green-200 group animate-fade-in-up"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="flex gap-3 md:gap-4">
+                  {/* Product Image */}
+                  <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-100 to-teal-100 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-md group-hover:scale-105 transition-transform duration-300">
                     {item.image && item.image.startsWith('http') ? (
                       <img 
                         src={item.image} 
@@ -333,76 +332,64 @@ const CartPage = () => {
                         loading="lazy"
                         onError={(e) => {
                           e.target.style.display = 'none';
-                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                          e.target.nextSibling.style.display = 'flex';
                         }}
                       />
                     ) : null}
                     <div 
-                      className={`text-3xl ${item.image && item.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
+                      className={`text-3xl md:text-4xl ${item.image && item.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}
                     >
                       {item.imageAlt || item.image || '🌿'}
                     </div>
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base md:text-lg font-bold text-gray-800 mb-1 truncate">
-                      {item.name}
-                      {item.isBundle && <Badge variant="warning" className="mr-2 text-xs">📦 عرض</Badge>}
-                    </h3>
-                    <p className="text-xs md:text-sm text-gray-500 mb-2">{item.size}</p>
-                    
-                    {item.isBundle && item.bundleProducts && (
-                      <div className="mb-2">
-                        <p className="text-xs text-gray-600 font-semibold mb-1">يحتوي على:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {item.bundleProducts.map(productId => {
-                            const product = getProductById(productId);
-                            return product ? (
-                              <span key={productId} className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">
-                                {product.name}
-                              </span>
-                            ) : null;
-                          })}
-                        </div>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm md:text-base lg:text-lg font-bold text-gray-800 truncate group-hover:text-green-600 transition-colors">
+                          {item.name}
+                        </h3>
+                        <p className="text-xs md:text-sm text-gray-500 bg-gray-100 inline-block px-2 py-0.5 rounded-lg mt-1">
+                          {item.size}
+                        </p>
                       </div>
-                    )}
+                      <button
+                        onClick={() => setItemToDelete(item)}
+                        className="text-red-500 hover:text-white hover:bg-red-500 p-2 rounded-xl transition-all duration-300 flex-shrink-0 active:scale-95"
+                        aria-label="حذف من السلة"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                     
-                    <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t-2 border-gray-100">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => updateCartQuantity(item.id, item.quantity - 1)}
-                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 hover:from-red-50 hover:to-red-100 hover:text-red-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md active:scale-95"
                           aria-label="تقليل الكمية"
                         >
                           <Minus size={14} />
                         </button>
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+                        <span className="w-10 md:w-12 text-center font-bold text-base md:text-lg text-green-600">
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() => updateCartQuantity(item.id, item.quantity + 1)}
-                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                          className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 hover:from-green-50 hover:to-green-100 hover:text-green-600 flex items-center justify-center transition-all shadow-sm hover:shadow-md active:scale-95"
                           aria-label="زيادة الكمية"
                         >
                           <Plus size={14} />
                         </button>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <p className="text-base md:text-lg font-bold text-gray-800">
-                            {item.price * item.quantity} ج
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {item.quantity} × {item.price}
-                          </p>
-                        </div>
-                        
-                        <button
-                          onClick={() => removeFromCart(item.id, item.name)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
-                          aria-label="حذف من السلة"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                      <div className="text-right">
+                        <p className="text-base md:text-lg lg:text-xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                          {item.price * item.quantity} ج
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.quantity} × {item.price} ج
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -411,130 +398,275 @@ const CartPage = () => {
             ))}
           </div>
 
-          {/* Order Summary */}
-          <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg h-fit lg:sticky lg:top-24">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 flex items-center gap-2">
-              <Package size={24} />
+          {/* Order Summary Sidebar */}
+          <div className="bg-white p-4 md:p-6 rounded-2xl shadow-xl h-fit lg:sticky lg:top-24 border-2 border-gray-100">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-2 rounded-xl">
+                <Package size={20} className="text-white" />
+              </div>
               ملخص الطلب
             </h2>
             
-            <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
-              <div className="flex justify-between text-base md:text-lg">
-                <span>المجموع الفرعي:</span>
-                <span className="font-bold">{cartTotals.total} جنيه</span>
-              </div>
-              
-              <div className="flex justify-between text-sm md:text-base">
-                <span>الشحن:</span>
-                <span className="font-bold">
-                  {cartTotals.shipping === 0 ? (
-                    <span className="text-green-600 flex items-center gap-1">
-                      <Truck size={16} />
-                      مجاني
-                    </span>
-                  ) : (
-                    `${cartTotals.shipping} جنيه`
-                  )}
-                </span>
-              </div>
-              
-              <hr className="border-gray-200" />
-              
-              <div className="flex justify-between text-lg md:text-xl font-bold text-green-600">
-                <span>الإجمالي:</span>
-                <span>{cartTotals.finalTotal} جنيه</span>
-              </div>
-            </div>
-
             {!isCheckout ? (
-              <button
-                onClick={() => setIsCheckout(true)}
-                className="w-full bg-green-600 text-white py-3 md:py-4 rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
-              >
-                <ShoppingCart size={20} />
-                إتمام الطلب
-              </button>
+              <>
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">المجموع الفرعي:</span>
+                    <span className="font-bold text-gray-800 text-lg">{cartTotals.total} ج</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">الشحن:</span>
+                    <span className="font-bold">
+                      {cartTotals.shipping === 0 ? (
+                        <span className="text-green-600 flex items-center gap-1 text-lg">
+                          <Check size={18} />
+                          مجاني
+                        </span>
+                      ) : (
+                        <span className="text-gray-800 text-lg">{cartTotals.shipping} ج</span>
+                      )}
+                    </span>
+                  </div>
+                  
+                  <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                  
+                  <div className="flex justify-between items-center bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-xl border-2 border-green-200">
+                    <span className="font-bold text-gray-800 text-lg">الإجمالي:</span>
+                    <span className="font-bold text-2xl bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                      {cartTotals.finalTotal} ج
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsCheckout(true)}
+                  className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-4 rounded-xl font-bold hover:from-green-700 hover:to-teal-700 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 mb-4"
+                >
+                  <ShoppingCart size={20} />
+                  إتمام الطلب
+                </button>
+
+                {/* Trust Badges */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl border border-green-100">
+                    <Truck size={16} className="text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-green-700 font-medium">توصيل سريع وآمن</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <Clock size={16} className="text-blue-600 flex-shrink-0" />
+                    <span className="text-sm text-blue-700 font-medium">24-48 ساعة</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-xl border border-purple-100">
+                    <MessageCircle size={16} className="text-purple-600 flex-shrink-0" />
+                    <span className="text-sm text-purple-700 font-medium">دعم فوري</span>
+                  </div>
+                </div>
+              </>
             ) : (
-              <div className="space-y-3 md:space-y-4">
-                <h3 className="text-base md:text-lg font-bold text-gray-800 flex items-center gap-2">
-                  <User size={20} />
-                  بيانات التوصيل
-                </h3>
-                
-                <div>
+              <form onSubmit={(e) => { e.preventDefault(); handleCheckout(); }} className="space-y-4">
+                {/* Form Fields */}
+                {/* First Name */}
+                <div className="animate-fade-in-right">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <User size={14} />
+                    الاسم الأول *
+                  </label>
                   <input
                     type="text"
-                    placeholder="الاسم الكامل *"
-                    value={state.customerInfo.name}
+                    placeholder="مثال: أحمد"
+                    value={formData.firstName}
                     onChange={(e) => {
-                      dispatch({ 
-                        type: 'UPDATE_CUSTOMER_INFO', 
-                        payload: { name: e.target.value } 
-                      });
-                      if (errors.name) setErrors({...errors, name: ''});
+                      setFormData({...formData, firstName: e.target.value});
+                      if (errors.firstName) setErrors({...errors, firstName: ''});
                     }}
-                    maxLength={MAX_NAME_LENGTH}
-                    className={`w-full p-2 md:p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base ${
-                      errors.name ? 'border-red-500' : 'border-gray-300'
+                    maxLength={MAX_NAME_LENGTH / 2}
+                    className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${
+                      errors.firstName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-green-500'
                     }`}
                   />
-                  {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                  {errors.firstName && (
+                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={12} />
+                      {errors.firstName}
+                    </p>
+                  )}
                 </div>
-                
-                <div>
+
+                {/* Last Name */}
+                <div className="animate-fade-in-right" style={{animationDelay: '50ms'}}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <User size={14} />
+                    الاسم الأخير *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مثال: محمد"
+                    value={formData.lastName}
+                    onChange={(e) => {
+                      setFormData({...formData, lastName: e.target.value});
+                      if (errors.lastName) setErrors({...errors, lastName: ''});
+                    }}
+                    maxLength={MAX_NAME_LENGTH / 2}
+                    className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${
+                      errors.lastName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-green-500'
+                    }`}
+                  />
+                  {errors.lastName && (
+                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={12} />
+                      {errors.lastName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div className="animate-fade-in-right" style={{animationDelay: '100ms'}}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <Phone size={14} />
+                    رقم الهاتف *
+                  </label>
                   <input
                     type="tel"
-                    placeholder="رقم التليفون *"
-                    value={state.customerInfo.phone}
+                    placeholder="01012345678"
+                    value={formData.phone}
                     onChange={(e) => {
-                      dispatch({ 
-                        type: 'UPDATE_CUSTOMER_INFO', 
-                        payload: { phone: e.target.value } 
-                      });
+                      setFormData({...formData, phone: e.target.value});
                       if (errors.phone) setErrors({...errors, phone: ''});
                     }}
-                    className={`w-full p-2 md:p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base ${
-                      errors.phone ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${
+                      errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-green-500'
                     }`}
                   />
-                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  {errors.phone && (
+                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={12} />
+                      {errors.phone}
+                    </p>
+                  )}
                 </div>
-                
-                <div>
+
+                {/* Governorate */}
+                <div className="animate-fade-in-right" style={{animationDelay: '150ms'}}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <MapPin size={14} />
+                    المحافظة *
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setGovernorateOpen(!governorateOpen)}
+                      className={`w-full p-3 border-2 rounded-xl text-right flex items-center justify-between transition-all ${
+                        errors.governorate ? 'border-red-500 bg-red-50' : 'border-gray-200 hover:border-green-500'
+                      }`}
+                    >
+                      <ChevronDown size={18} className={`transition-transform duration-300 ${governorateOpen ? 'rotate-180' : ''}`} />
+                      <span className={formData.governorate ? 'text-gray-800' : 'text-gray-400'}>
+                        {formData.governorate 
+                          ? `${EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.emoji} ${EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name}`
+                          : 'اختر محافظة'
+                        }
+                      </span>
+                    </button>
+                    
+                    {governorateOpen && (
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40"
+                          onClick={() => setGovernorateOpen(false)}
+                        ></div>
+                        <div className="absolute top-full right-0 left-0 mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-2xl z-50 max-h-60 overflow-y-auto animate-fade-in-down">
+                          {EGYPTIAN_GOVERNORATES.map((gov, index) => (
+                            <button
+                              key={gov.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData({...formData, governorate: gov.id});
+                                setGovernorateOpen(false);
+                                if (errors.governorate) setErrors({...errors, governorate: ''});
+                              }}
+                              className={`w-full p-3 text-right hover:bg-green-50 transition-all border-b border-gray-100 last:border-b-0 flex items-center justify-between animate-fade-in-right ${
+                                formData.governorate === gov.id ? 'bg-green-100 text-green-800 font-bold' : ''
+                              }`}
+                              style={{animationDelay: `${index * 20}ms`}}
+                            >
+                              <span className="text-2xl">{gov.emoji}</span>
+                              <span className="font-medium">{gov.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {errors.governorate && (
+                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={12} />
+                      {errors.governorate}
+                    </p>
+                  )}
+                </div>
+
+                {/* Address */}
+                <div className="animate-fade-in-right" style={{animationDelay: '200ms'}}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <MapPin size={14} />
+                    العنوان بالتفصيل *
+                  </label>
                   <textarea
-                    placeholder="العنوان بالتفصيل (الشارع، المنطقة، المحافظة) *"
-                    value={state.customerInfo.address}
+                    placeholder="الشارع، المنطقة، أقرب علامة مميزة..."
+                    value={formData.address}
                     onChange={(e) => {
-                      dispatch({ 
-                        type: 'UPDATE_CUSTOMER_INFO', 
-                        payload: { address: e.target.value } 
-                      });
+                      setFormData({...formData, address: e.target.value});
                       if (errors.address) setErrors({...errors, address: ''});
                     }}
                     rows="3"
                     maxLength={MAX_ADDRESS_LENGTH}
-                    className={`w-full p-2 md:p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm md:text-base ${
-                      errors.address ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full p-3 border-2 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition-all ${
+                      errors.address ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-green-500'
                     }`}
                   />
-                  {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
+                  {errors.address && (
+                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1 animate-shake">
+                      <AlertCircle size={12} />
+                      {errors.address}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">{formData.address.length}/{MAX_ADDRESS_LENGTH}</p>
                 </div>
-                
-                <div className="flex gap-2">
+
+                {/* Notes */}
+                <div className="animate-fade-in-right" style={{animationDelay: '250ms'}}>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                    <MessageCircle size={14} />
+                    ملاحظات (اختياري)
+                  </label>
+                  <textarea
+                    placeholder="ملاحظات إضافية، معاد مناسب للاستلام..."
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    rows="2"
+                    maxLength={500}
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none transition-all"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{formData.notes.length}/500</p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4 animate-fade-in-up" style={{animationDelay: '300ms'}}>
                   <button
+                    type="button"
                     onClick={() => {
                       setIsCheckout(false);
                       setErrors({});
                     }}
-                    disabled={isSubmitting}
-                    className="flex-1 bg-gray-200 text-gray-700 py-2 md:py-3 rounded-lg hover:bg-gray-300 transition-colors disabled:opacity-50 text-sm md:text-base"
+                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl hover:bg-gray-300 transition-all font-bold active:scale-95"
                   >
                     إلغاء
                   </button>
                   <button
-                    onClick={handleCheckout}
+                    type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 bg-green-600 text-white py-2 md:py-3 rounded-lg hover:bg-green-700 transition-colors font-bold disabled:opacity-50 flex items-center justify-center gap-2 text-sm md:text-base"
+                    className="flex-[2] bg-gradient-to-r from-green-600 to-teal-600 text-white py-3 rounded-xl hover:from-green-700 hover:to-teal-700 transition-all font-bold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl active:scale-95"
                   >
                     {isSubmitting ? (
                       <>
@@ -549,14 +681,14 @@ const CartPage = () => {
                     )}
                   </button>
                 </div>
-                
-                <div className="bg-blue-50 p-2 md:p-3 rounded-lg">
-                  <p className="text-xs text-blue-800 text-center flex items-center justify-center gap-1">
-                    <MessageCircle size={14} />
-                    سيتم توجيهك لواتساب لإتمام الطلب
+
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border-2 border-blue-200 animate-fade-in-up" style={{animationDelay: '350ms'}}>
+                  <p className="text-xs text-blue-800 flex items-center gap-2 font-medium">
+                    <MessageCircle size={16} className="flex-shrink-0" />
+                    سيتم توجيهك لواتساب لإتمام وتأكيد الطلب
                   </p>
                 </div>
-              </div>
+              </form>
             )}
           </div>
         </div>
@@ -569,36 +701,39 @@ const CartPage = () => {
           title="⚠️ تأكيد حذف المنتج"
           message={
             <div className="text-right">
-              <p className="mb-3 text-gray-700">هل أنت متأكد من حذف هذا المنتج من السلة؟</p>
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p className="mb-4 text-gray-700 text-base">هل أنت متأكد من حذف هذا المنتج من السلة؟</p>
+              <div className="bg-gradient-to-br from-gray-50 to-white p-4 rounded-xl border-2 border-gray-200 shadow-inner">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-teal-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
                     {itemToDelete.image && itemToDelete.image.startsWith('http') ? (
                       <img 
                         src={itemToDelete.image} 
                         alt={itemToDelete.name}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover rounded-xl"
                       />
                     ) : (
-                      <span className="text-2xl">{itemToDelete.imageAlt || itemToDelete.image || '🌿'}</span>
+                      <span className="text-3xl">{itemToDelete.imageAlt || itemToDelete.image || '🌿'}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-800 truncate">{itemToDelete.name}</p>
-                    <p className="text-sm text-gray-600">الكمية: {itemToDelete.quantity}</p>
-                    <p className="text-sm text-green-600 font-semibold">
+                    <p className="font-bold text-gray-800 text-base mb-1 truncate">{itemToDelete.name}</p>
+                    <p className="text-sm text-gray-600 mb-1">الكمية: {itemToDelete.quantity}</p>
+                    <p className="text-base font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
                       {itemToDelete.price * itemToDelete.quantity} جنيه
                     </p>
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-3">💡 يمكنك إضافته مرة أخرى في أي وقت</p>
+              <p className="text-xs text-gray-500 mt-4 flex items-center gap-1 justify-center">
+                <Sparkles size={12} />
+                يمكنك إضافته مرة أخرى في أي وقت
+              </p>
             </div>
           }
           confirmLabel="نعم، احذف المنتج"
           cancelLabel="إلغاء"
           onConfirm={confirmDelete}
-          onCancel={cancelDelete}
+          onCancel={() => setItemToDelete(null)}
           type="danger"
         />
       )}

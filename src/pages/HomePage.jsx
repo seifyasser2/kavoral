@@ -1,13 +1,16 @@
 import React from 'react';
-import { Shield, Truck, Award, Users, ArrowLeft, Sparkles, Heart, Star } from 'lucide-react';
+import { Shield, Truck, Award, Users, ArrowLeft, Sparkles, Heart, Star, Zap, Gift, TrendingUp } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { getFeaturedProducts } from '../data/products';
 import { SITE_CONFIG } from '../data/config';
+import { getFeaturedBundles } from '../data/bundles';
 import ProductCard from '../components/product/ProductCard';
+import { Badge } from '../components/common';
 
 const HomePage = () => {
-  const { navigateTo } = useAppContext();
+  const { navigateTo, dispatch } = useAppContext();
   const featuredProducts = getFeaturedProducts();
+  const featuredOffers = getFeaturedBundles();
 
   const features = [
     { 
@@ -43,6 +46,118 @@ const HomePage = () => {
       iconColor: 'text-purple-600'
     }
   ];
+
+  const OfferCard = ({ offer, index }) => {
+    const gradients = [
+      { from: 'from-orange-500', to: 'to-red-500' },
+      { from: 'from-purple-500', to: 'to-pink-500' },
+      { from: 'from-blue-500', to: 'to-cyan-500' },
+      { from: 'from-green-500', to: 'to-emerald-500' }
+    ];
+
+    const gradient = gradients[index % 4];
+
+    return (
+      <div className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border-2 border-gray-100 hover:border-transparent transform hover:-translate-y-2 h-full">
+        {/* Top Bar */}
+        <div className={`h-2 bg-gradient-to-r ${gradient.from} ${gradient.to}`}></div>
+
+        {/* Header */}
+        <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} p-6 text-white relative overflow-hidden`}>
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+              backgroundSize: '20px 20px'
+            }}></div>
+          </div>
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center overflow-hidden">
+                {offer.image && offer.image.startsWith('http') ? (
+                  <img 
+                    src={offer.image} 
+                    alt={offer.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`text-4xl ${offer.image && offer.image.startsWith('http') ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+                  {offer.imageAlt || offer.image || '🎁'}
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <Badge variant="danger" className="bg-yellow-400 text-yellow-900 flex items-center gap-1 animate-pulse shadow-lg">
+                  <Zap size={14} />
+                  {offer.totalDiscountPercentage}%
+                </Badge>
+                {offer.featured && (
+                  <Badge variant="success" className="bg-white text-green-600 flex items-center gap-1 shadow-lg">
+                    <TrendingUp size={14} />
+                    الأكثر
+                  </Badge>
+                )}
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-bold mb-2">{offer.name}</h3>
+            <p className="text-sm opacity-90 leading-relaxed">{offer.description}</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {/* Products Count */}
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs font-semibold text-blue-700">
+              📦 {offer.products.length} منتجات في الباقة
+            </p>
+          </div>
+
+          {/* Benefits */}
+          <div className="mb-4">
+            <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-1">
+              <Sparkles size={16} className="text-green-600" />
+              الفوائد:
+            </h4>
+            <ul className="space-y-1">
+              {offer.benefits.slice(0, 2).map((benefit, idx) => (
+                <li key={idx} className="text-xs text-gray-600 flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">✓</span>
+                  <span>{benefit}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Pricing */}
+          <div className="bg-gradient-to-br from-green-500 to-teal-500 rounded-xl p-4 mb-4 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm line-through opacity-60">{offer.originalPrice} ج</span>
+              <Zap size={20} className="animate-pulse" />
+            </div>
+            <div className="text-2xl font-bold mb-2">{offer.bundlePrice} جنيه</div>
+            <div className="text-xs opacity-90">
+              وفّر <span className="font-bold">{offer.savings}</span> جنيه!
+            </div>
+          </div>
+
+          {/* View Button */}
+          <button
+            onClick={() => navigateTo('offers')}
+            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition-all font-bold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <Gift size={18} />
+            عرض العروض
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -109,7 +224,7 @@ const HomePage = () => {
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-full">
                   <Truck size={18} />
-                  <span>شحن مجاني +300ج</span>
+                  <span>شحن مجاني +500ج</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white/10 backdrop-blur px-4 py-2 rounded-full">
                   <Star size={18} fill="currentColor" />
@@ -202,6 +317,53 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Special Offers Section - NEW */}
+      {featuredOffers.length > 0 && (
+        <section className="py-20 bg-gradient-to-b from-orange-50 via-red-50 to-white relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-100 rounded-full blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }}></div>
+
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="text-center mb-16">
+              <div className="inline-flex items-center gap-3 mb-4">
+                <Zap size={32} className="text-red-600 animate-pulse" />
+                <Sparkles size={28} className="text-yellow-500 animate-bounce" />
+                <Gift size={32} className="text-orange-600 animate-pulse" />
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                <span className="bg-gradient-to-r from-orange-600 via-red-600 to-pink-600 bg-clip-text text-transparent">
+                  العروض المميزة 🎁
+                </span>
+              </h2>
+              
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                باقات حصرية بأسعار مخفضة تصل حتى {featuredOffers[0]?.totalDiscountPercentage}% خصم!
+              </p>
+            </div>
+
+            {/* Offers Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {featuredOffers.map((offer, index) => (
+                <OfferCard key={offer.id} offer={offer} index={index} />
+              ))}
+            </div>
+
+            {/* CTA Button */}
+            <div className="text-center">
+              <button
+                onClick={() => navigateTo('offers')}
+                className="group bg-gradient-to-r from-orange-600 to-red-600 text-white px-10 py-4 rounded-xl hover:from-orange-700 hover:to-red-700 transition-all font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 inline-flex items-center gap-3"
+              >
+                <span>عرض جميع العروض</span>
+                <ArrowLeft size={22} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Featured Products - Enhanced */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
