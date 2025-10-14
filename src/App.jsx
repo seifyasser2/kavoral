@@ -5,7 +5,6 @@ import Footer from "./components/common/Footer";
 import { Notification, GlobalStyles } from "./components/common";
 import { ArrowUp } from "lucide-react";
 import ErrorBoundary from "./components/common/ErrorBoundary";
-import { Z_INDEX } from "./constants";
 
 // ============================================
 // LAZY LOAD PAGES - Code Splitting
@@ -222,10 +221,11 @@ const AppContent = () => {
           'system-ui, -apple-system, "Segoe UI", Roboto, "Cairo", sans-serif',
       }}
     >
+      <a href="#main-content" className="skip-to-main">تخطي إلى المحتوى</a>
       <Header />
 
       {/* Main content */}
-      <main className="flex-1" style={{ paddingTop: "80px" }}>
+      <main id="main-content" className="flex-1" style={{ paddingTop: "80px" }}>
         <Suspense fallback={<PageLoadingFallback />}>
           <div className="animate-fade-in">{renderPage()}</div>
         </Suspense>
@@ -253,7 +253,7 @@ const AppContent = () => {
       <GlobalStyles />
 
       {/* Enhanced Custom Styles */}
-      <style jsx global>{`
+      <style>{`
         /* Prevent horizontal scroll */
         html,
         body {

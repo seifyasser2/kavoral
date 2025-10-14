@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, MessageCircle, Users, Clock, MapPin, Heart, Sparkles } from 'lucide-react';
+import { Phone, Mail, MessageCircle, Clock, Heart, Sparkles } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { SITE_CONFIG, getWhatsAppLink, getDeveloperWhatsAppLink } from '../../data/config';
 
