@@ -3,11 +3,11 @@ import { Gift, Sparkles, CheckCircle, ShoppingCart, Plus, Minus, Package, Zap, T
 import { useAppContext } from '../context/AppContext';
 import { BUNDLE_OFFERS } from '../data/bundles';
 import { getProductById } from '../data/products';
-import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
+import { getWhatsAppLink } from '../data/config';
 import { Badge } from '../components/common';
 
 const OffersPage = () => {
-  const { state, dispatch, navigateTo } = useAppContext();
+  const { dispatch, navigateTo } = useAppContext();
   const [quantities, setQuantities] = useState({});
 
   const updateQuantity = (bundleId, change) => {

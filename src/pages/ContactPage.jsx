@@ -1,9 +1,9 @@
 import React from 'react';
 import { 
   Phone, Mail, MessageCircle, Users, Clock, MapPin, 
-  Send, Sparkles
+  Sparkles
 } from 'lucide-react';
-import { SITE_CONFIG, getWhatsAppLink, getDeveloperWhatsAppLink } from '../data/config';
+import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
 
 const ContactPage = () => {
   const contactMethods = [

@@ -5,8 +5,7 @@ import { getProductsByCategory, PRODUCTS_DATA } from '../../data/products';
 import { CATEGORIES } from '../../data/config';
 import { Badge, LoadingSpinner } from '../common';
 import ProductCard from './ProductCard';
-import { VALIDATION, PAGINATION } from '../../constants';
-import { debounce, searchInArray } from '../../utils/helpers';
+import { VALIDATION } from '../../constants';
 // ============================================
 // دالة Debounce لتحسين الأداء
 // ============================================

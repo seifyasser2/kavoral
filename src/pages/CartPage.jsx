@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { 
   ShoppingCart, Plus, Minus, Trash2, Send, User, 
-  Gift, Truck, MessageCircle, Package, Mail, Phone,
-  MapPin, Clock, Check, AlertCircle, X, ChevronDown, Sparkles
+  Truck, MessageCircle, Package, Phone,
+  MapPin, Clock, Check, AlertCircle, ChevronDown, Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG, calculateShipping, isEligibleForFreeShipping, getRemainingForFreeShipping } from '../data/config';

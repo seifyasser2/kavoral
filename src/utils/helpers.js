@@ -20,7 +20,7 @@ export const sanitizeText = (text, maxLength = 1000) => {
   if (typeof text !== 'string') return '';
   
   return text
-    .replace(/[<>\"'`]/g, '')
+    .replace(/[<>"'`]/g, '')
     .replace(/\n{2,}/g, '\n')
     .trim()
     .substring(0, maxLength);

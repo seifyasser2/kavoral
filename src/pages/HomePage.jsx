@@ -8,7 +8,7 @@ import ProductCard from '../components/product/ProductCard';
 import { Badge } from '../components/common';
 
 const HomePage = () => {
-  const { navigateTo, dispatch } = useAppContext();
+  const { navigateTo } = useAppContext();
   const featuredProducts = getFeaturedProducts();
   const featuredOffers = getFeaturedBundles();
 

@@ -7,7 +7,7 @@ const sanitizeText = (text) => {
   if (typeof text !== 'string') return '';
   
   return text
-    .replace(/[<>\"'`]/g, '') // احذف الأحرف الخطرة
+    .replace(/[<>"'`]/g, '') // احذف الأحرف الخطرة
     .replace(/\n{2,}/g, '\n') // حد من الأسطر الفارغة
     .trim()
     .substring(0, 1000); // حد الطول

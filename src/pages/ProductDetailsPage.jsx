@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { PRODUCTS_DATA } from '../data/products';
-import { SITE_CONFIG } from '../data/config';
+// SITE_CONFIG not used here
 import { Badge, EmptyState } from '../components/common';
 import ProductCard from '../components/product/ProductCard';
 

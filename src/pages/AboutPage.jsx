@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Leaf, Shield, Award, Users, Heart, Star, Sparkles, 
-  TrendingUp, ThumbsUp, Package, Clock, CheckCircle 
+  TrendingUp, ThumbsUp, Package, Clock 
 } from 'lucide-react';
 import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
 

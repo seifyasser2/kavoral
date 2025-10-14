@@ -6,7 +6,7 @@ import { useAppContext } from '../../context/AppContext';
 import { SITE_CONFIG } from '../../data/config';
 
 const Header = () => {
-  const { state, dispatch, navigateTo } = useAppContext();
+  const { state, navigateTo } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -40,7 +40,7 @@ const Header = () => {
   const cartItemsCount = state.cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <header 
+    <header role="banner"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled 
           ? 'bg-white/98 backdrop-blur-2xl shadow-2xl py-2' 
@@ -92,7 +92,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation - Modern Design */}
-          <nav className="hidden lg:flex gap-1">
+          <nav className="hidden lg:flex gap-1" role="navigation" aria-label="القائمة الرئيسية">
             {navigation.map(({ key, label, icon: Icon, color, gradient }) => (
               <button
                 key={key}
@@ -102,6 +102,7 @@ const Header = () => {
                     ? `bg-gradient-to-r ${gradient} text-white shadow-xl scale-105`
                     : `text-gray-700 ${color} hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-lg`
                 }`}
+                aria-current={state.currentPage === key ? 'page' : undefined}
               >
                 {state.currentPage !== key && (
                   <span className="absolute inset-0 bg-gradient-to-r from-green-50 to-teal-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>

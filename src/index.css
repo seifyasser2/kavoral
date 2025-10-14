@@ -6,6 +6,16 @@
    GLOBAL STYLES & RESETS
    ============================================ */
 
+:root {
+  /* Design tokens */
+  --color-primary: #22c55e;
+  --color-primary-600: #16a34a;
+  --color-secondary: #14b8a6;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-soft: 0 2px 8px rgba(0,0,0,0.08);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -241,7 +251,7 @@ a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 3px solid #22c55e;
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 8px;
 }

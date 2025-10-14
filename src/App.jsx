@@ -354,20 +354,8 @@ const AppContent = () => {
         }
 
         /* Page transition */
-        .page-transition {
-          animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+        .page-transition { animation: fadeInUp 0.5s ease-out; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Gradient animations */
         @keyframes gradient-x {
@@ -390,16 +378,7 @@ const AppContent = () => {
           position: relative;
         }
 
-        .glow-effect::before {
-          content: "";
-          position: absolute;
-          inset: -2px;
-          border-radius: inherit;
-          background: linear-gradient(45deg, #22c55e, #14b8a6, #06b6d4);
-          opacity: 0;
-          filter: blur(10px);
-          transition: opacity 0.3s ease;
-        }
+        .glow-effect::before { content: ""; position: absolute; inset: -2px; border-radius: inherit; background: linear-gradient(45deg, #22c55e, #14b8a6, #06b6d4); opacity: 0; filter: blur(10px); transition: opacity 0.3s ease; }
 
         .glow-effect:hover::before {
           opacity: 0.7;
@@ -411,9 +390,7 @@ const AppContent = () => {
           transition: transform 0.5s ease;
         }
 
-        .card-3d:hover {
-          transform: perspective(1000px) rotateY(5deg) rotateX(5deg);
-        }
+        .card-3d:hover { transform: perspective(1000px) rotateY(5deg) rotateX(5deg); }
 
         /* Floating elements */
         @keyframes float {
