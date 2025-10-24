@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/" />
+  </url>
+  
+  <!-- Products Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/products</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/products" />
+  </url>
+  
+  <!-- Offers Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/offers</loc>
+    <lastmod>2025-01-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/offers" />
+  </url>
+  
+  <!-- About Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/about</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/about" />
+  </url>
+  
+  <!-- Contact Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/contact</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/contact" />
+  </url>
+  
+  <!-- Cart Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/cart</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Wishlist Page -->
+  <url>
+    <loc>https://kavoral-oil-shop.vercel.app/wishlist</loc>
+    <lastmod>2025-01-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+</urlset>
