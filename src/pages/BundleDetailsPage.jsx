@@ -220,17 +220,7 @@ const BundleDetailsPage = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button
-                    onClick={handleToggleWishlist}
-                    className={`p-2 rounded-xl border-2 transition-all ${
-                      isInWishlist 
-                        ? 'border-red-500 bg-red-50 text-red-500' 
-                        : 'border-gray-300 bg-white text-gray-600 hover:border-red-500'
-                    }`}
-                    type="button"
-                  >
-                    <Heart size={20} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
-                  </button>
+                  
                   
                   <button
                     onClick={handleAddToCart}

@@ -11,7 +11,7 @@ export const GLOBAL_BUNDLE_DISCOUNT = 50; // 50% خصم عام
 const bundlesRawData = [
   {
     id: 'hair-growth-scientific',
-    name: 'باقة تحفيز نمو الشعر 🌱',
+    name: 'باقة تحفيز نمو الشعر ',
     description: 'تركيبة متخصصة: زيت الروزماري + بذور اليقطين + الخروع - لتطويل الشعر وإيقاف التساقط',
     image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&h=500&fit=crop&q=80',
     imageAlt: '🌱',
@@ -53,9 +53,9 @@ const bundlesRawData = [
 
   {
     id: 'anti-aging-luxury',
-    name: 'باقة مكافحة الشيخوخة ✨',
+    name: 'باقة مكافحة الشيخوخة ',
     description: 'أفضل 4 زيوت مضادة للشيخوخة: الورد + الأرغان + اللوز + الجوجوبا - لبشرة شابة ومشرقة',
-    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500&h=500&fit=crop&q=80',
+    image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1761316384/argan_nxhgxb.png',
     imageAlt: '✨',
     products: [2, 10, 7, 6],
     productNames: ['زيت الورد النقي', 'زيت الأرغان المغربي', 'زيت اللوز الحلو', 'زيت الجوجوبا'],
@@ -94,7 +94,7 @@ const bundlesRawData = [
 
   {
     id: 'complete-hair-nutrition',
-    name: 'باقة التغذية الشاملة للشعر 💪',
+    name: 'باقة التغذية الشاملة للشعر ',
     description: 'تركيبة متكاملة: السبع زيوت + جوز الهند + اللوز + الجوجوبا - لشعر قوي وصحي',
     image: 'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop&q=80',
     imageAlt: '💇‍♀️',
@@ -135,7 +135,7 @@ const bundlesRawData = [
 
   {
     id: 'beard-premium-care',
-    name: 'باقة العناية المتخصصة بالدقن 🧔',
+    name: 'باقة العناية المتخصصة بالدقن ',
     description: 'تركيبة احترافية للرجال: الأرغان + الجوجوبا + اللوز - لدقن قوية وصحية',
     image: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=500&h=500&fit=crop&q=80',
     imageAlt: '👨‍🦰',
@@ -177,7 +177,7 @@ const bundlesRawData = [
 
   {
     id: 'hair-loss-blocker',
-    name: 'باقة إيقاف التساقط المكثف 🛑',
+    name: 'باقة إيقاف التساقط المكثف ',
     description: 'تركيبة طبية: الروزماري + بذور اليقطين + الجرجير + الخروع - توقف التساقط وتعيد الكثافة',
     image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=500&h=500&fit=crop&q=80',
     imageAlt: '🌱',
@@ -219,7 +219,7 @@ const bundlesRawData = [
 
   {
     id: 'skin-hydration-glow',
-    name: 'باقة الترطيب والإشراق للبشرة ✨',
+    name: 'باقة الترطيب والإشراق للبشرة ',
     description: 'أفضل 4 زيوت للترطيب العميق: الورد + جوز الهند + اللوز + الجوجوبا - بشرة نضرة',
     image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=500&h=500&fit=crop&q=80',
     imageAlt: '🌹',
@@ -261,7 +261,7 @@ const bundlesRawData = [
 
   {
     id: 'therapeutic-relaxation',
-    name: 'باقة العلاج والاسترخاء 🧘‍♀️',
+    name: 'باقة العلاج والاسترخاء ',
     description: 'زيوت علاجية متخصصة: اللافندر + شجرة الشاي + السمسم + الجوجوبا - للتدليك والعلاج',
     image: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=500&h=500&fit=crop&q=80',
     imageAlt: '🧘',

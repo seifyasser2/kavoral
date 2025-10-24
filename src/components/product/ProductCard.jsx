@@ -114,32 +114,32 @@ const ProductCard = ({ product }) => {
         {/* Badges */}
         <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10 gap-1">
           <div className="flex flex-col gap-1">
-            {product.featured && (
+            {/* {product.featured && (
               <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                 ⭐
               </span>
-            )}
+            )} */}
             {hasDiscount && (
-              <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                -{product.totalDiscountPercentage}%
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                خصم {product.totalDiscountPercentage}%
               </span>
             )}
           </div>
           
-          {/* Wishlist Button - ✅ مصغر */}
+          {/* Wishlist */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               toggleWishlist(product);
             }}
-            className={`p-1.5 rounded-full transition-all flex-shrink-0 ${
+            className={`w-6 h-6 rounded-full transition-all flex-shrink-0 flex items-center justify-center ${
               isInWishlist 
                 ? 'bg-red-500 text-white' 
-                : 'bg-white text-gray-400 hover:text-red-500'
+                : 'bg-white/80 text-gray-600 hover:text-red-500 hover:bg-white'
             }`}
-            aria-label={isInWishlist ? 'إزالة من المفضلة' : 'إضافة للمفضلة'}
+            title={isInWishlist ? "إزالة من المفضلة" : "إضافة للمفضلة"}
           >
-            <Heart size={14} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
+            <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
           </button>
         </div>
       </div>
@@ -169,13 +169,13 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* Price */}
-          <div className="bg-green-50 border border-green-100 rounded-lg p-1.5 md:p-2 mb-2 md:mb-3">
+         <div className="bg-green-50 border border-green-100 rounded-lg p-1.5 md:p-2 mb-2 md:mb-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm md:text-base font-bold text-green-600">
+              <span className="text-sm md:text-base font-bold text-green-700">
                 {product.price} ج
               </span>
               {hasDiscount && (
-                <span className="text-xs text-gray-400 line-through">
+                <span className="text-xs text-gray-700 line-through font-semibold">
                   {product.originalPrice} ج
                 </span>
               )}

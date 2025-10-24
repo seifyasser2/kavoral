@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Heart, ShoppingCart, Plus, Minus, Star, Eye, Package } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Star, Eye, Package } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { getProductById } from '../../data/products';
 
@@ -8,7 +8,6 @@ const BundleCard = ({ bundle }) => {
   const [localQuantity, setLocalQuantity] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const isInWishlist = state.wishlist.some(item => item.id === bundle.id);
   const bundleProducts = bundle.products.map(id => getProductById(id)).filter(p => p !== null);
 
   const handleAddToCart = useCallback(() => {
@@ -50,19 +49,15 @@ const BundleCard = ({ bundle }) => {
     });
   }, [localQuantity, bundle, dispatch]);
 
-  const handleToggleWishlist = useCallback(() => {
-    dispatch({ type: 'TOGGLE_WISHLIST', payload: bundle });
-  }, [bundle, dispatch]);
-
   const handleViewDetails = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_BUNDLE', payload: bundle });
     navigateTo('bundle-details');
   }, [bundle, dispatch, navigateTo]);
 
   return (
-    <article className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col border border-gray-100">
+    <article className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden h-full flex flex-col border border-gray-100">
       {/* Image Section */}
-      <div className="relative mb-2 md:mb-3">
+      <div className="relative mb-1.5 md:mb-2">
         <div 
           className="relative w-full aspect-square bg-gray-50 rounded-lg overflow-hidden cursor-pointer"
           onClick={handleViewDetails}
@@ -89,77 +84,55 @@ const BundleCard = ({ bundle }) => {
             />
           ) : null}
           
-          <div className={`text-5xl sm:text-6xl ${bundle.image && bundle.image.startsWith('http') && imageLoaded ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
+          <div className={`text-4xl ${bundle.image && bundle.image.startsWith('http') && imageLoaded ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
             {bundle.imageAlt || '🎁'}
-          </div>
-
-          {/* Overlay on Hover */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <div className="text-white text-center">
-              <Eye size={24} className="mx-auto mb-2 sm:mb-4" />
-              <p className="font-bold text-xs sm:text-sm">عرض التفاصيل</p>
-            </div>
           </div>
         </div>
         
         {/* Badges */}
         <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10 gap-1">
           <div className="flex flex-col gap-1">
-            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-              🔥 -{bundle.totalDiscountPercentage}%
-            </span>
-            {bundle.featured && (
+            {/* {bundle.featured && (
               <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                 ⭐
               </span>
-            )}
+            )} */}
+            <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+              خصم {bundle.totalDiscountPercentage}%
+            </span>
           </div>
-          
-          {/* Wishlist - ✅ مصغر */}
-          <button
-            onClick={handleToggleWishlist}
-            className={`p-1.5 rounded-full transition-all flex-shrink-0 ${
-              isInWishlist 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white text-gray-400 hover:text-red-500'
-            }`}
-          >
-            <Heart size={14} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
-          </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="px-2 md:px-3 pb-2 md:pb-3 flex flex-col flex-1">
-        <div className="mb-2 md:mb-3 flex-grow">
-          <h3 className="text-xs md:text-base font-bold text-gray-800 mb-1 line-clamp-2 leading-tight">
+      {/* Product Info */}
+      <div className="px-1.5 md:px-2 pb-1.5 md:pb-2 flex-grow flex flex-col">
+        <div 
+          className="cursor-pointer mb-1.5 md:mb-2 flex-grow"
+          onClick={handleViewDetails}
+        >
+          <h3 className="text-xs md:text-sm font-bold text-gray-800 mb-0.5 line-clamp-2 leading-tight">
             {bundle.name}
           </h3>
           
-          <p className="text-xs text-gray-600 line-clamp-1 mb-1 md:mb-2">
-            {bundle.description}
-          </p>
+          <p className="text-xs text-gray-500 mb-0.5 md:mb-1">{bundle.description}</p>
 
           {/* Rating */}
-          <div className="flex items-center gap-1 md:gap-2 mb-2 md:mb-3 bg-yellow-50 border border-yellow-100 rounded-lg p-1.5 md:p-2">
-            <div className="flex gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  size={10}
-                  className={i < Math.floor(bundle.ratings) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
-                />
-              ))}
-            </div>
-            <span className="text-xs md:text-sm font-bold text-gray-800">{bundle.ratings}</span>
-            <span className="text-xs text-gray-600">({bundle.reviews})</span>
+          <div className="flex items-center gap-0.5 md:gap-1 mb-0.5 md:mb-1">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                size={10}
+                className={i < Math.floor(bundle.ratings) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
+              />
+            ))}
+            <span className="text-xs text-gray-600 mr-0.5">{bundle.ratings}</span>
           </div>
 
           {/* Products List */}
-          <div className="bg-gray-50 border border-gray-100 rounded-lg p-2 md:p-3 mb-2 md:mb-3">
-            <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-2">
-              <Package size={12} className="text-green-600 flex-shrink-0" />
-              <span className="text-xs font-bold text-gray-700">{bundleProducts.length} منتجات:</span>
+          <div className="bg-gray-50 border border-gray-100 rounded-lg p-1.5 md:p-2 mb-2 md:mb-3">
+            <div className="flex items-center gap-1 md:gap-2 mb-1">
+              <Package size={12} className="text-orange-600 flex-shrink-0" />
+              <span className="text-xs font-bold text-gray-700">{bundleProducts.length} منتجات</span>
             </div>
             <div className="space-y-0.5">
               {bundleProducts.slice(0, 2).map((product, idx) => (
@@ -169,52 +142,46 @@ const BundleCard = ({ bundle }) => {
                 </p>
               ))}
               {bundleProducts.length > 2 && (
-                <p className="text-xs text-green-600 font-bold">+{bundleProducts.length - 2} منتجات</p>
+                <p className="text-xs text-orange-600 font-bold">+{bundleProducts.length - 2} منتجات أخرى</p>
               )}
             </div>
-            
-            <button
-              onClick={handleViewDetails}
-              className="w-full mt-1.5 md:mt-2 py-1.5 md:py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-bold text-xs"
-            >
-              اعرف التفاصيل
-            </button>
           </div>
 
           {/* Price */}
-          <div className="bg-orange-50 border border-orange-100 rounded-lg p-2 md:p-3 mb-2 md:mb-3">
-            <div className="flex items-center justify-between mb-0.5 md:mb-1">
-              <div className="flex items-end gap-1">
-                <span className="text-lg md:text-xl font-bold text-orange-600">{bundle.bundlePrice}ج</span>
-                <span className="text-xs text-gray-400 line-through">{bundle.originalPrice}ج</span>
-              </div>
-              <span className="text-xs font-bold bg-orange-500 text-white px-1.5 md:px-2 py-0.5 md:py-1 rounded-full whitespace-nowrap">
-                -{bundle.totalDiscountPercentage}%
+          <div className="bg-orange-50 border border-orange-100 rounded-lg p-1.5 md:p-2 mb-2 md:mb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm md:text-base font-bold text-orange-700">
+                {bundle.bundlePrice} ج
+              </span>
+              <span className="text-gray-700 line-through font-semibold">
+                {bundle.originalPrice} ج
               </span>
             </div>
-            <p className="text-xs text-orange-700 font-semibold">وفّر {bundle.savings} ج</p>
           </div>
         </div>
 
-        {/* Quantity */}
+        {/* Quantity Selector */}
         <div className="bg-gray-50 rounded-lg p-1.5 md:p-2 mb-1.5 md:mb-2">
           <div className="flex items-center justify-between mb-1.5 md:mb-2">
-            <span className="text-xs font-bold text-gray-700">الكمية:</span>
+            <span className="text-xs font-semibold text-gray-700">الكمية:</span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setLocalQuantity(Math.max(0, localQuantity - 1))}
-                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-orange-500 flex items-center justify-center text-gray-600"
+                disabled={localQuantity <= 0}
+                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-orange-500 disabled:opacity-50 flex items-center justify-center transition-colors text-gray-600"
+                type="button"
               >
                 <Minus size={12} />
               </button>
               
-              <span className="text-sm md:text-lg font-bold w-6 md:w-8 text-center text-orange-600">
+              <span className="text-sm md:text-base font-bold w-6 md:w-8 text-center text-orange-600">
                 {localQuantity}
               </span>
               
               <button
                 onClick={() => setLocalQuantity(localQuantity + 1)}
-                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-orange-500 flex items-center justify-center text-gray-600"
+                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-orange-500 flex items-center justify-center transition-colors text-gray-600"
+                type="button"
               >
                 <Plus size={12} />
               </button>
@@ -223,26 +190,38 @@ const BundleCard = ({ bundle }) => {
 
           {localQuantity > 0 && (
             <div className="text-center pt-1 md:pt-2 border-t border-gray-200">
-              <span className="text-xs md:text-sm font-bold text-orange-600">
+              <span className="text-orange-600 font-bold text-xs md:text-sm">
                 {localQuantity * bundle.bundlePrice} ج
               </span>
             </div>
           )}
         </div>
 
-        {/* Add to Cart */}
-        <button
-          onClick={handleAddToCart}
-          disabled={localQuantity <= 0}
-          className={`w-full py-1.5 md:py-2 rounded-lg transition-all font-bold text-xs md:text-sm flex items-center justify-center gap-1 md:gap-2 ${
-            localQuantity <= 0
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : 'bg-orange-500 text-white hover:bg-orange-600'
-          }`}
-        >
-          <ShoppingCart size={14} />
-          <span>أضف للسلة</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="flex gap-1 md:gap-2">
+          <button
+            onClick={handleViewDetails}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 md:py-2 px-1.5 md:px-2 rounded-lg transition-colors font-semibold text-xs flex items-center justify-center gap-0.5"
+            type="button"
+          >
+            <Eye size={12} />
+            <span className="hidden sm:inline">عرض</span>
+          </button>
+          
+          <button
+            onClick={handleAddToCart}
+            disabled={localQuantity <= 0}
+            className={`flex-[2] py-1.5 md:py-2 px-1.5 md:px-2 rounded-lg transition-all font-bold text-xs flex items-center justify-center gap-0.5 ${
+              localQuantity <= 0
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+            type="button"
+          >
+            <ShoppingCart size={12} />
+            <span>أضف</span>
+          </button>
+        </div>
       </div>
     </article>
   );
