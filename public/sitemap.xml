@@ -5,52 +5,52 @@
   
   <!-- Homepage -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/</loc>
+    <loc>https://kavoral.vercel.app/</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral.vercel.app/" />
   </url>
   
   <!-- Products Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/products</loc>
+    <loc>https://kavoral.vercel.app/products</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/products" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral.vercel.app/products" />
   </url>
   
   <!-- Offers Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/offers</loc>
+    <loc>https://kavoral.vercel.app/offers</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/offers" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral.vercel.app/offers" />
   </url>
   
   <!-- About Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/about</loc>
+    <loc>https://kavoral.vercel.app/about</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/about" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral.vercel.app/about" />
   </url>
   
   <!-- Contact Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/contact</loc>
+    <loc>https://kavoral.vercel.app/contact</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral-oil-shop.vercel.app/contact" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://kavoral.vercel.app/contact" />
   </url>
   
   <!-- Cart Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/cart</loc>
+    <loc>https://kavoral.vercel.app/cart</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -58,7 +58,7 @@
   
   <!-- Wishlist Page -->
   <url>
-    <loc>https://kavoral-oil-shop.vercel.app/wishlist</loc>
+    <loc>https://kavoral.vercel.app/wishlist</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

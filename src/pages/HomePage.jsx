@@ -28,7 +28,7 @@ const HomePage = () => {
         "@type": "ListItem",
         "position": 1,
         "name": "الرئيسية",
-        "item": "https://kavoral-oil-shop.vercel.app/"
+        "item": "https://kavoral.vercel.app/"
       }]
     });
     document.head.appendChild(script);
