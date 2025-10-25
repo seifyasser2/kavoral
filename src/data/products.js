@@ -321,7 +321,7 @@ const productsRawData = [
   },
   {
     id: 12,
-    name: 'زيت شجرة الشاي الطبيعي',
+    name: 'زيت شجرة الشاي  ',
     slug: 'tea-tree-oil',
     originalPrice: 220,
     discountPercentage: 0,
@@ -348,7 +348,7 @@ const productsRawData = [
   },
   {
     id: 13,
-    name: 'زيت اللافندر الطبيعي',
+    name: 'زيت اللافندر ',
     slug: 'lavender-oil',
     originalPrice: 180,
     discountPercentage: 0,
@@ -375,7 +375,7 @@ const productsRawData = [
   },
   {
     id: 14,
-    name: 'زيت بذور اليقطين الطبيعي',
+    name: 'زيت بذور اليقطين ',
     slug: 'pumpkin-seed-oil',
     originalPrice: 220,
     discountPercentage: 0,
@@ -402,7 +402,7 @@ const productsRawData = [
   },
   {
     id: 15,
-    name: 'زيت السمسم الطبيعي',
+    name: 'زيت السمسم ',
     slug: 'sesame-oil',
     originalPrice: 190,
     discountPercentage: 0,

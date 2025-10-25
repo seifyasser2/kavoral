@@ -46,7 +46,7 @@ const Header = () => {
     { key: 'home', label: 'الرئيسية', icon: Home },
     { key: 'products', label: 'المنتجات', icon: Tag },
     { key: 'offers', label: 'العروض', icon: Gift },
-    { key: 'about', label: 'عننا', icon: User },
+    { key: 'about', label: 'من نحن', icon: User },
     { key: 'contact', label: 'تواصل', icon: Phone }
   ];
 
