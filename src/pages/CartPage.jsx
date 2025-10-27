@@ -172,6 +172,35 @@ const handleCheckout = useCallback(async () => {
     // إنشاء رقم الطلب
     const orderNumber = `ORD-${Date.now()}`;
 
+    // حفظ الطلب في Google Sheets
+try {
+  const GOOGLE_SHEETS_URL = process.env.REACT_APP_GOOGLE_SHEETS_URL;
+  
+  if (GOOGLE_SHEETS_URL) {
+    await fetch(GOOGLE_SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderNumber: orderNumber,
+        customerName: fullName,
+        phone: phone,
+        governorate: governorateName,
+        address: address,
+        items: state.cart.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: cartTotal
+      })
+    });
+    console.log('✅ Order saved to Google Sheets');
+  }
+} catch (error) {
+  console.error('❌ Error saving to Google Sheets:', error);
+}
+
+
     // ============================================
     // 1️⃣ حفظ الطلب في Google Sheets أولاً
     // ============================================

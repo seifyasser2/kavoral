@@ -302,6 +302,15 @@ const Footer = () => {
                 {SITE_CONFIG.developer.name}
               </a>
             </div>
+            {/* Dashboard Link - مخفي للأدمن فقط */}
+<div className="hidden">
+  <button
+    onClick={() => navigateTo('dashboard')}
+    className="text-xs text-gray-400 hover:text-green-500"
+  >
+    Admin
+  </button>
+</div>
           </div>
         </div>
       </div>

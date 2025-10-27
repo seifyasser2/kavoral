@@ -24,7 +24,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
-
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 // ============================================
 // WHATSAPP BUTTON - Enhanced - ظاهر دائماً
 // ============================================
@@ -203,6 +203,8 @@ const AppContent = () => {
         return <OrderSuccessPage />;
       default:
         return <HomePage />;
+        case "dashboard":
+  return <DashboardPage />;
     }
   };
 
