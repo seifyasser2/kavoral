@@ -247,6 +247,7 @@ const CartPage = () => {
         notes: notes,
         paymentMethod: paymentMethodText,
         paymentProof: formData.paymentProof || null,
+        paymentProofUploaded: !!(formData.paymentProof),
         items: state.cart.map(item => ({
           name: item.name,
           size: item.size,
@@ -256,7 +257,10 @@ const CartPage = () => {
         total: cartTotal
       };
 
-      console.log('📊 Saving order to Google Sheets...', orderData);
+      console.log('📊 Saving order to Google Sheets (including payment proof image)...', {
+        ...orderData,
+        paymentProof: orderData.paymentProof ? 'Image data present' : 'No image'
+      });
 
       const sheetsResult = await sendOrderToGoogleSheets(orderData);
 
@@ -307,7 +311,8 @@ const CartPage = () => {
       
       if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
         message += `✅ *تم الدفع عبر ${paymentMethodText}*\n`;
-        message += `📸 تم إرفاق صورة الإيصال\n\n`;
+        message += `📸 *مهم جداً:* يرجى إرسال صورة الإيصال الآن\n`;
+        message += `💾 الصورة محفوظة في النظام للمراجعة\n\n`;
       }
       
       if (sheetsResult.success && sheetsResult.data?.data?.orderId) {
@@ -315,9 +320,6 @@ const CartPage = () => {
       }
       
       message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}\n`;
-      if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
-        message += `⚠️ *مهم:* يرجى إرسال صورة الإيصال بعد هذه الرسالة\n`;
-      }
       message += `سيتم التواصل معك قريباً بخصوص الشحن`;
 
       const encodedMessage = encodeURIComponent(message);
@@ -327,8 +329,9 @@ const CartPage = () => {
         dispatch({
           type: 'ADD_NOTIFICATION',
           payload: { 
-            message: '⚠️ لا تنسى إرسال صورة الإيصال في الواتساب!', 
-            type: 'warning' 
+            message: '⚠️ الصورة محفوظة في النظام - يرجى إرسال نسخة في الواتساب للتأكيد!', 
+            type: 'warning',
+            duration: 6000
           }
         });
       }
@@ -736,7 +739,7 @@ const CartPage = () => {
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-2">
                       صورة الإيصال * 
-                      <span className="text-gray-500 font-normal mr-1">(إلزامي)</span>
+                      <span className="text-gray-500 font-normal mr-1">(سيتم حفظها في النظام + يرجى إرسالها في الواتساب)</span>
                     </label>
                     
                     {!formData.paymentProof ? (
@@ -751,6 +754,7 @@ const CartPage = () => {
                           <Upload size={24} className="mx-auto mb-2 text-gray-400" />
                           <p className="text-xs text-gray-600 font-bold mb-1">اضغط لرفع صورة الإيصال</p>
                           <p className="text-xs text-gray-400">PNG, JPG, JPEG (حد أقصى 5 ميجا)</p>
+                          <p className="text-xs text-blue-600 mt-2">📝 ستُحفظ في قاعدة البيانات</p>
                         </div>
                       </label>
                     ) : (
@@ -758,8 +762,8 @@ const CartPage = () => {
                         <div className="flex items-center gap-3">
                           <FileImage size={24} className="text-green-600" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-green-800">تم رفع الصورة بنجاح</p>
-                            <p className="text-xs text-green-600">جاهزة للإرسال</p>
+                            <p className="text-xs font-bold text-green-800">✅ تم رفع الصورة</p>
+                            <p className="text-xs text-green-600">سيتم حفظها في قاعدة البيانات</p>
                           </div>
                           <button
                             type="button"
@@ -772,8 +776,11 @@ const CartPage = () => {
                         <img 
                           src={formData.paymentProof} 
                           alt="إيصال الدفع" 
-                          className="mt-2 w-full h-32 object-cover rounded-lg"
+                          className="mt-2 w-full h-32 object-cover rounded-lg border-2 border-green-200"
                         />
+                        <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                          <p className="text-xs text-blue-700">💡 ستُفتح الواتساب - أرسل نسخة من الصورة هناك أيضاً للتأكيد</p>
+                        </div>
                       </div>
                     )}
                     {errors.paymentProof && <p className="text-red-500 text-xs mt-1">{errors.paymentProof}</p>}
