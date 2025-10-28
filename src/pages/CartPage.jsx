@@ -227,6 +227,7 @@ const handleCheckout = useCallback(async () => {
     }
 
   setIsSubmitting(true);
+  setLastSubmit(now);
 
   try {
     const firstName = sanitizeText(formData.firstName);
@@ -256,29 +257,57 @@ const handleCheckout = useCallback(async () => {
         quantity: item.quantity,
         price: item.price
       })),
-      total: cartTotal
+      total: cartTotal,
+      timestamp: new Date().toISOString()
     };
 
-    // 🔥 حفظ في Firebase
+    // 🔥 حفظ في Firebase أولاً
     console.log('🔥 Saving to Firebase...');
     const firebaseResult = await saveOrderToFirebase(orderData);
 
-    if (!firebaseResult.success) {
-      console.warn('⚠️ Firebase save failed:', firebaseResult.error);
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { 
-          message: 'تنبيه: لم يتم حفظ الطلب تلقائياً', 
-          type: 'warning' 
-        }
-      });
-    } else {
+    let firebaseSaved = false;
+    let firebaseOrderId = null;
+
+    if (firebaseResult.success) {
       console.log('✅ Saved to Firebase! Order ID:', firebaseResult.orderId);
+      firebaseSaved = true;
+      firebaseOrderId = firebaseResult.orderId;
+    } else {
+      console.warn('⚠️ Firebase save failed:', firebaseResult.error);
+      // الاستمرار بإرسال الواتساب حتى لو فشل Firebase
     }
 
-    // إرسال للواتساب (نفس الكود القديم)
+    // إرسال للواتساب
     let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
-    // ... باقي كود الرسالة
+    message += `📋 *رقم الطلب:* ${orderNumber}\n`;
+    if (firebaseSaved) {
+      message += `🔥 *Firebase ID:* ${firebaseOrderId}\n`;
+    }
+    message += `\n👤 *معلومات العميل:*\n`;
+    message += `• الاسم: ${fullName}\n`;
+    message += `• الهاتف: ${phone}\n`;
+    message += `• المحافظة: ${governorateName}\n`;
+    message += `• العنوان: ${address}\n`;
+    if (notes) {
+      message += `• ملاحظات: ${notes}\n`;
+    }
+    message += `\n💳 *طريقة الدفع:* ${paymentMethodText}\n`;
+    
+    message += `\n📦 *المنتجات:*\n`;
+    state.cart.forEach((item, idx) => {
+      message += `${idx + 1}. ${item.name} (${item.size})\n`;
+      message += `   • الكمية: ${item.quantity}\n`;
+      message += `   • السعر: ${item.price} ج\n`;
+      message += `   • المجموع: ${item.quantity * item.price} ج\n\n`;
+    });
+    
+    message += `\n💰 *الإجمالي:* ${cartTotal} جنيه\n`;
+    message += `\n⏰ *التاريخ:* ${new Date().toLocaleDateString('ar-EG')}\n`;
+    message += `⏱️ *الوقت:* ${new Date().toLocaleTimeString('ar-EG')}\n`;
+    
+    if (formData.paymentProof) {
+      message += `\n📸 *ملاحظة:* تم رفع صورة الإيصال - يرجى إرسالها في الرسالة التالية\n`;
+    }
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
@@ -296,8 +325,8 @@ const handleCheckout = useCallback(async () => {
         total: cartTotal,
         customerName: fullName,
         customerPhone: phone,
-        firebaseId: firebaseResult.orderId,
-        savedToFirebase: firebaseResult.success
+        firebaseId: firebaseOrderId,
+        savedToFirebase: firebaseSaved
       }
     });
     
@@ -306,7 +335,7 @@ const handleCheckout = useCallback(async () => {
     dispatch({
       type: 'ADD_NOTIFICATION',
       payload: { 
-        message: firebaseResult.success 
+        message: firebaseSaved 
           ? '✅ تم إرسال وحفظ الطلب بنجاح!' 
           : '✅ تم إرسال الطلب بنجاح!', 
         type: 'success' 
@@ -315,21 +344,26 @@ const handleCheckout = useCallback(async () => {
     
     setIsCheckout(false);
     setFormData({ firstName: '', lastName: '', phone: '', governorate: '', address: '', notes: '', paymentMethod: '', paymentProof: null });
+    setErrors({});
     
     setTimeout(() => {
       navigateTo('order-success');
     }, 500);
     
   } catch (error) {
-    console.error('Checkout error:', error);
+    console.error('❌ Checkout error:', error);
     dispatch({
       type: 'ADD_NOTIFICATION',
-      payload: { message: 'حدث خطأ. تأكد من اتصالك بالإنترنت', type: 'error' }
+      payload: { 
+        message: 'حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى', 
+        type: 'error' 
+      }
     });
   } finally {
     setIsSubmitting(false);
   }
-}, [formData, state, dispatch, validateForm, cartTotal, navigateTo]);
+}, [formData, state.cart, dispatch, validateForm, cartTotal, navigateTo, lastSubmit]);
+
   if (state.cart.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">

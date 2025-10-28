@@ -58,30 +58,35 @@ const OrderSuccessPage = () => {
 
           {/* Order Details */}
           <div className="p-8 space-y-6">
-            {/* Google Sheets Status - NEW ✨ */}
-            {orderInfo.savedToSheets !== undefined && (
+
+
+          {/* Firebase Status - Enhanced ✨ */}
+            {orderInfo.savedToFirebase !== undefined && (
               <div className={`border-2 rounded-xl p-4 ${
-                orderInfo.savedToSheets 
+                orderInfo.savedToFirebase 
                   ? 'bg-green-50 border-green-200' 
                   : 'bg-yellow-50 border-yellow-200'
               }`}>
                 <div className="flex items-center gap-3">
-                  {orderInfo.savedToSheets ? (
+                  {orderInfo.savedToFirebase ? (
                     <>
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in">
                         <Database size={24} className="text-white" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-green-800 flex items-center gap-2">
-                          ✅ تم حفظ الطلب في قاعدة البيانات
+                          ✅ تم حفظ الطلب في قاعدة البيانات Firebase
                         </h3>
                         <p className="text-sm text-green-700 mt-1">
                           طلبك محفوظ بأمان ويمكننا تتبعه بسهولة
                         </p>
-                        {orderInfo.googleSheetsId && (
-                          <p className="text-xs text-green-600 mt-2 font-mono">
-                            ID: {orderInfo.googleSheetsId}
-                          </p>
+                        {orderInfo.firebaseId && (
+                          <div className="mt-2 bg-green-100 rounded-lg p-2">
+                            <p className="text-xs text-green-800 font-bold">🔥 Firebase ID:</p>
+                            <p className="text-xs text-green-700 font-mono break-all">
+                              {orderInfo.firebaseId}
+                            </p>
+                          </div>
                         )}
                       </div>
                     </>
@@ -92,10 +97,13 @@ const OrderSuccessPage = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-yellow-800">
-                          ⚠️ لم يتم حفظ الطلب تلقائياً
+                          ⚠️ لم يتم حفظ الطلب تلقائياً في Firebase
                         </h3>
                         <p className="text-sm text-yellow-700 mt-1">
-                          لكن لا تقلق! تم إرسال طلبك عبر واتساب وسنتواصل معك قريباً
+                          لكن لا تقلق! تم إرسال طلبك عبر واتساب بنجاح وسنتواصل معك قريباً
+                        </p>
+                        <p className="text-xs text-yellow-600 mt-2">
+                          💡 نصيحة: تحقق من اتصالك بالإنترنت وأن إعدادات Firebase صحيحة
                         </p>
                       </div>
                     </>
