@@ -303,7 +303,7 @@ const Footer = () => {
               </a>
             </div>
             {/* Dashboard Link - مخفي للأدمن فقط */}
-<div className="hidden">
+<div className="">
   <button
     onClick={() => navigateTo('dashboard')}
     className="text-xs text-gray-400 hover:text-green-500"

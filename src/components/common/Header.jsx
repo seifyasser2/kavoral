@@ -92,7 +92,7 @@ const Header = () => {
             onClick={() => handleNavigate('home')}
           >
             <img 
-              src="/logo.png" 
+              src="/logo192.png" 
               alt={SITE_CONFIG.name}
               className="w-12 h-12 object-contain"
               onError={(e) => {

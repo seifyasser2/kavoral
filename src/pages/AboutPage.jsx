@@ -49,7 +49,7 @@ const AboutPage = () => {
         <div className="container mx-auto px-4 text-center">
           <div className="mb-6">
             <img 
-              src="/logo.png" 
+              src="/logo.png192" 
               alt={SITE_CONFIG.name}
               className="w-24 h-24 mx-auto object-contain"
               onError={(e) => {
