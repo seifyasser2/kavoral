@@ -205,10 +205,7 @@ const CartPage = () => {
     return Object.keys(newErrors).length === 0;
   }, [formData]);
 
-
-
-
-const handleCheckout = useCallback(async () => {
+  const handleCheckout = useCallback(async () => {
     const now = Date.now();
     if (now - lastSubmit < SUBMIT_RATE_LIMIT) {
       dispatch({
@@ -226,110 +223,183 @@ const handleCheckout = useCallback(async () => {
       return;
     }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const firstName = sanitizeText(formData.firstName);
-    const lastName = sanitizeText(formData.lastName);
-    const phone = formData.phone.trim();
-    const governorateName = EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name || formData.governorate;
-    const address = sanitizeText(formData.address);
-    const notes = sanitizeText(formData.notes);
-    const fullName = `${firstName} ${lastName}`;
-    
-    const paymentMethodData = PAYMENT_METHODS[formData.paymentMethod];
-    const paymentMethodText = `${paymentMethodData.icon} ${paymentMethodData.name}`;
-    const orderNumber = `ORD-${Date.now()}`;
+    try {
+      const firstName = sanitizeText(formData.firstName);
+      const lastName = sanitizeText(formData.lastName);
+      const phone = formData.phone.trim();
+      const governorateName = EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name || formData.governorate;
+      const address = sanitizeText(formData.address);
+      const notes = sanitizeText(formData.notes);
+      const fullName = `${firstName} ${lastName}`;
+      
+      const paymentMethodData = PAYMENT_METHODS[formData.paymentMethod];
+      const paymentMethodText = `${paymentMethodData.icon} ${paymentMethodData.name}`;
 
-    const orderData = {
-      orderNumber: orderNumber,
-      customerName: fullName,
-      phone: phone,
-      governorate: governorateName,
-      address: address,
-      notes: notes,
-      paymentMethod: paymentMethodText,
-      paymentProof: formData.paymentProof || null,
-      items: state.cart.map(item => ({
-        name: item.name,
-        size: item.size,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      total: cartTotal
-    };
+      const orderNumber = `ORD-${Date.now()}`;
 
-    // 🔥 حفظ في Firebase
-    console.log('🔥 Saving to Firebase...');
-    const firebaseResult = await saveOrderToFirebase(orderData);
+      const orderData = {
+        orderNumber: orderNumber,
+        customerName: fullName,
+        phone: phone,
+        governorate: governorateName,
+        address: address,
+        notes: notes,
+        paymentMethod: paymentMethodText,
+        paymentProof: formData.paymentProof || null,
+        paymentProofUploaded: !!(formData.paymentProof),
+        items: state.cart.map(item => ({
+          name: item.name,
+          size: item.size,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        total: cartTotal
+      };
 
-    if (!firebaseResult.success) {
-      console.warn('⚠️ Firebase save failed:', firebaseResult.error);
+      console.log('📊 Saving order to Google Sheets (including payment proof image)...', {
+        ...orderData,
+        paymentProof: orderData.paymentProof ? 'Image data present' : 'No image'
+      });
+
+      const sheetsResult = await sendOrderToGoogleSheets(orderData);
+
+      if (!sheetsResult.success) {
+        console.warn('⚠️ Failed to save to Google Sheets:', sheetsResult.error);
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: { 
+            message: 'تنبيه: لم يتم حفظ الطلب في قاعدة البيانات', 
+            type: 'warning' 
+          }
+        });
+      } else {
+        console.log('✅ Order saved to Google Sheets successfully!');
+      }
+
+      let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
+      message += `📝 *بيانات العميل:*\n`;
+      message += `الاسم: *${fullName}*\n`;
+      message += `التليفون: *${phone}*\n`;
+      message += `المحافظة: *${governorateName}*\n`;
+      message += `العنوان: *${address}*\n`;
+      message += `طريقة الدفع: *${paymentMethodText}*\n`;
+      
+      if (formData.paymentMethod === 'vodafone') {
+        message += `📱 الرقم: ${PAYMENT_METHODS.vodafone.number}\n`;
+      } else if (formData.paymentMethod === 'instapay') {
+        message += `💳 المعرف: ${PAYMENT_METHODS.instapay.username}\n`;
+      }
+      
+      if (notes) {
+        message += `الملاحظات: ${notes}\n`;
+      }
+      message += `\n🛍️ *تفاصيل الطلب:*\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      
+      state.cart.forEach((item, index) => {
+        message += `\n${index + 1}. *${item.name}*\n`;
+        message += `   الحجم: ${item.size}\n`;
+        message += `   الكمية: ${item.quantity}\n`;
+        message += `   السعر: ${item.price} جنيه\n`;
+        message += `   المجموع: *${item.price * item.quantity} جنيه*\n`;
+      });
+
+      message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `\n💰 *الإجمالي:*\n`;
+      message += `*${cartTotal} جنيه*\n\n`;
+      
+      if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
+        message += `✅ *تم الدفع عبر ${paymentMethodText}*\n`;
+        message += `📸 *مهم جداً:* يرجى إرسال صورة الإيصال الآن\n`;
+        message += `💾 الصورة محفوظة في النظام للمراجعة\n\n`;
+      }
+      
+      if (sheetsResult.success && sheetsResult.data?.data?.orderId) {
+        message += `\n📊 *Order ID:* ${sheetsResult.data.data.orderId}\n`;
+      }
+      
+      message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}\n`;
+      message += `سيتم التواصل معك قريباً بخصوص الشحن`;
+
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
+      
+      if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: { 
+            message: '⚠️ الصورة محفوظة في النظام - يرجى إرسال نسخة في الواتساب للتأكيد!', 
+            type: 'warning',
+            duration: 6000
+          }
+        });
+      }
+      
+      const newWindow = window.open(whatsappUrl, '_blank');
+      
+      if (!newWindow || newWindow.closed) {
+        try {
+          await navigator.clipboard.writeText(whatsappUrl);
+          dispatch({
+            type: 'ADD_NOTIFICATION',
+            payload: { message: 'تم نسخ رابط الواتساب', type: 'info' }
+          });
+        } catch (e) {
+          console.error('Clipboard error:', e);
+        }
+        setIsSubmitting(false);
+        return;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { 
-          message: 'تنبيه: لم يتم حفظ الطلب تلقائياً', 
-          type: 'warning' 
+        type: 'SET_LAST_ORDER',
+        payload: {
+          orderNumber: orderNumber,
+          date: new Date().toLocaleDateString('ar-EG'),
+          time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+          items: [...state.cart],
+          total: cartTotal,
+          customerName: fullName,
+          customerPhone: phone,
+          googleSheetsId: sheetsResult.success ? sheetsResult.data?.data?.orderId : null,
+          savedToSheets: sheetsResult.success
         }
       });
-    } else {
-      console.log('✅ Saved to Firebase! Order ID:', firebaseResult.orderId);
+      
+      dispatch({ type: 'CLEAR_CART' });
+      
+      const successMessage = sheetsResult.success 
+        ? '✅ تم إرسال الطلب وحفظه في قاعدة البيانات بنجاح!'
+        : '✅ تم إرسال الطلب بنجاح!';
+      
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: { message: successMessage, type: 'success' }
+      });
+      
+      setIsCheckout(false);
+      setFormData({ firstName: '', lastName: '', phone: '', governorate: '', address: '', notes: '', paymentMethod: '', paymentProof: null });
+      setLastSubmit(Date.now());
+      
+      setTimeout(() => {
+        navigateTo('order-success');
+      }, 500);
+      
+    } catch (error) {
+      console.error('Checkout error:', error);
+      dispatch({
+        type: 'ADD_NOTIFICATION',
+        payload: { message: 'حدث خطأ. تأكد من اتصالك بالإنترنت', type: 'error' }
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, navigateTo]);
 
-    // إرسال للواتساب (نفس الكود القديم)
-    let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
-    // ... باقي كود الرسالة
-
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
-    
-    window.open(whatsappUrl, '_blank');
-
-    // حفظ معلومات الطلب الأخير
-    dispatch({
-      type: 'SET_LAST_ORDER',
-      payload: {
-        orderNumber: orderNumber,
-        date: new Date().toLocaleDateString('ar-EG'),
-        time: new Date().toLocaleTimeString('ar-EG'),
-        items: [...state.cart],
-        total: cartTotal,
-        customerName: fullName,
-        customerPhone: phone,
-        firebaseId: firebaseResult.orderId,
-        savedToFirebase: firebaseResult.success
-      }
-    });
-    
-    dispatch({ type: 'CLEAR_CART' });
-    
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: { 
-        message: firebaseResult.success 
-          ? '✅ تم إرسال وحفظ الطلب بنجاح!' 
-          : '✅ تم إرسال الطلب بنجاح!', 
-        type: 'success' 
-      }
-    });
-    
-    setIsCheckout(false);
-    setFormData({ firstName: '', lastName: '', phone: '', governorate: '', address: '', notes: '', paymentMethod: '', paymentProof: null });
-    
-    setTimeout(() => {
-      navigateTo('order-success');
-    }, 500);
-    
-  } catch (error) {
-    console.error('Checkout error:', error);
-    dispatch({
-      type: 'ADD_NOTIFICATION',
-      payload: { message: 'حدث خطأ. تأكد من اتصالك بالإنترنت', type: 'error' }
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-}, [formData, state, dispatch, validateForm, cartTotal, navigateTo]);
   if (state.cart.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
