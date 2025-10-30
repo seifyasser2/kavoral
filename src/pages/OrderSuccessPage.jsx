@@ -1,12 +1,7 @@
-// ============================================
-// ENHANCED ORDER SUCCESS PAGE
-// استبدل محتوى OrderSuccessPage.jsx بهذا الكود المحسّن
-// ============================================
-
 import React, { useEffect, useState } from 'react';
 import { 
   CheckCircle, Package, Truck, Phone, MessageCircle, 
-  Home, ShoppingBag, Clock, Database, AlertCircle
+  Home, ShoppingBag, Clock, AlertTriangle
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
@@ -33,8 +28,7 @@ const OrderSuccessPage = () => {
   const orderInfo = state.lastOrder || {
     orderNumber: `ORD-${Date.now()}`,
     date: new Date().toLocaleDateString('ar-EG'),
-    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-    savedToSheets: false
+    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
   };
 
   return (
@@ -58,60 +52,6 @@ const OrderSuccessPage = () => {
 
           {/* Order Details */}
           <div className="p-8 space-y-6">
-
-
-          {/* Firebase Status - Enhanced ✨ */}
-            {orderInfo.savedToFirebase !== undefined && (
-              <div className={`border-2 rounded-xl p-4 ${
-                orderInfo.savedToFirebase 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-yellow-50 border-yellow-200'
-              }`}>
-                <div className="flex items-center gap-3">
-                  {orderInfo.savedToFirebase ? (
-                    <>
-                      <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 animate-scale-in">
-                        <Database size={24} className="text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-green-800 flex items-center gap-2">
-                          ✅ تم حفظ الطلب في قاعدة البيانات Firebase
-                        </h3>
-                        <p className="text-sm text-green-700 mt-1">
-                          طلبك محفوظ بأمان ويمكننا تتبعه بسهولة
-                        </p>
-                        {orderInfo.firebaseId && (
-                          <div className="mt-2 bg-green-100 rounded-lg p-2">
-                            <p className="text-xs text-green-800 font-bold">🔥 Firebase ID:</p>
-                            <p className="text-xs text-green-700 font-mono break-all">
-                              {orderInfo.firebaseId}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
-                        <AlertCircle size={24} className="text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-yellow-800">
-                          ⚠️ لم يتم حفظ الطلب تلقائياً في Firebase
-                        </h3>
-                        <p className="text-sm text-yellow-700 mt-1">
-                          لكن لا تقلق! تم إرسال طلبك عبر واتساب بنجاح وسنتواصل معك قريباً
-                        </p>
-                        <p className="text-xs text-yellow-600 mt-2">
-                          💡 نصيحة: تحقق من اتصالك بالإنترنت وأن إعدادات Firebase صحيحة
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Order Info */}
             <div className="bg-green-50 border border-green-100 rounded-xl p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -134,6 +74,42 @@ const OrderSuccessPage = () => {
               </div>
             </div>
 
+            {/* ⚠️ تحذير مهم للدفع الإلكتروني */}
+            {orderInfo.needsPaymentProof && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle size={32} className="text-yellow-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-yellow-900 mb-3">
+                      ⚠️ خطوة مهمة جداً!
+                    </h3>
+                    <div className="space-y-2 text-yellow-800">
+                      <p className="font-bold text-base">📸 يجب إرسال صورة إيصال الدفع الآن:</p>
+                      <ul className="space-y-2 mr-4">
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold">1️⃣</span>
+                          <span>افتح تطبيق {orderInfo.paymentMethod}</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold">2️⃣</span>
+                          <span>اعمل سكرينشوت (لقطة شاشة) للإيصال</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="font-bold">3️⃣</span>
+                          <span className="font-bold text-red-600">أرسل الصورة على واتساب فوراً</span>
+                        </li>
+                      </ul>
+                      <div className="bg-white rounded-lg p-3 mt-3 border-2 border-yellow-400">
+                        <p className="text-sm font-bold text-red-600 text-center">
+                          ⏰ الطلب لن يتم تأكيده بدون الإيصال!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Next Steps */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">
@@ -146,7 +122,11 @@ const OrderSuccessPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800">1. تأكيد الطلب</h3>
-                    <p className="text-sm text-gray-600">تم فتح واتساب لتأكيد طلبك</p>
+                    <p className="text-sm text-gray-600">
+                      {orderInfo.needsPaymentProof 
+                        ? '⚠️ أرسل صورة الإيصال على واتساب أولاً' 
+                        : 'تم فتح واتساب لتأكيد طلبك'}
+                    </p>
                   </div>
                 </div>
 
@@ -194,13 +174,21 @@ const OrderSuccessPage = () => {
             {/* Contact Buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <a
-                href={getWhatsAppLink('مرحباً، لدي استفسار عن طلبي: ' + orderInfo.orderNumber)}
+                href={getWhatsAppLink(
+                  orderInfo.needsPaymentProof 
+                    ? `صورة إيصال الدفع - طلب رقم: ${orderInfo.orderNumber}` 
+                    : `مرحباً، لدي استفسار عن طلبي: ${orderInfo.orderNumber}`
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-green-500 text-white py-4 px-6 rounded-xl hover:bg-green-600 transition-all font-bold flex items-center justify-center gap-2"
+                className={`py-4 px-6 rounded-xl transition-all font-bold flex items-center justify-center gap-2 ${
+                  orderInfo.needsPaymentProof
+                    ? 'bg-yellow-500 text-white hover:bg-yellow-600 animate-pulse'
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
               >
                 <MessageCircle size={20} />
-                تواصل واتساب
+                {orderInfo.needsPaymentProof ? '📸 أرسل الإيصال الآن' : 'تواصل واتساب'}
               </a>
               <a
                 href={`tel:${SITE_CONFIG.contact.phone}`}

@@ -2,12 +2,11 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { 
   ShoppingCart, Plus, Minus, Trash2, Send, User, 
   Gift, Truck, MessageCircle, Package, Mail, Phone,
-  MapPin, Clock, Check, AlertCircle, X, ChevronDown, Sparkles, Upload, FileImage
+  MapPin, Clock, Check, AlertCircle, X, ChevronDown, Sparkles
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
 import { Badge, LoadingSpinner, EmptyState, ConfirmModal } from '../components/common';
-import { sendOrderToGoogleSheets } from '../services/googleSheetsService';
 
 const MIN_NAME_LENGTH = 3;
 const MAX_NAME_LENGTH = 100;
@@ -101,8 +100,7 @@ const CartPage = () => {
     governorate: '',
     address: '',
     notes: '',
-    paymentMethod: '',
-    paymentProof: null
+    paymentMethod: ''
   });
 
   const cartTotal = useMemo(() => {
@@ -133,37 +131,6 @@ const CartPage = () => {
     }
   }, [itemToDelete, dispatch]);
 
-  const handleFileUpload = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'يرجى رفع صورة فقط', type: 'error' }
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'حجم الصورة يجب أن يكون أقل من 5 ميجا', type: 'error' }
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData({...formData, paymentProof: reader.result});
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'تم رفع الصورة بنجاح', type: 'success' }
-      });
-    };
-    reader.readAsDataURL(file);
-  }, [formData, dispatch]);
-
   const validateForm = useCallback(() => {
     const newErrors = {};
 
@@ -190,10 +157,6 @@ const CartPage = () => {
 
     if (!formData.paymentMethod) {
       newErrors.paymentMethod = 'يرجى اختيار طريقة الدفع';
-    }
-
-    if ((formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') && !formData.paymentProof) {
-      newErrors.paymentProof = 'يرجى رفع صورة الإيصال';
     }
 
     const address = formData.address?.trim();
@@ -239,45 +202,7 @@ const CartPage = () => {
 
       const orderNumber = `ORD-${Date.now()}`;
 
-      const orderData = {
-        orderNumber: orderNumber,
-        customerName: fullName,
-        phone: phone,
-        governorate: governorateName,
-        address: address,
-        notes: notes,
-        paymentMethod: paymentMethodText,
-        paymentProof: formData.paymentProof || null,
-        paymentProofUploaded: !!(formData.paymentProof),
-        items: state.cart.map(item => ({
-          name: item.name,
-          size: item.size,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        total: cartTotal
-      };
-
-      console.log('📊 Saving order to Google Sheets (including payment proof image)...', {
-        ...orderData,
-        paymentProof: orderData.paymentProof ? 'Image data present' : 'No image'
-      });
-
-      const sheetsResult = await sendOrderToGoogleSheets(orderData);
-
-      if (!sheetsResult.success) {
-        console.warn('⚠️ Failed to save to Google Sheets:', sheetsResult.error);
-        dispatch({
-          type: 'ADD_NOTIFICATION',
-          payload: { 
-            message: 'تنبيه: لم يتم حفظ الطلب في قاعدة البيانات', 
-            type: 'warning' 
-          }
-        });
-      } else {
-        console.log('✅ Order saved to Google Sheets successfully!');
-      }
-
+      // ✅ رسالة واتساب - التركيز الوحيد
       let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
       message += `📝 *بيانات العميل:*\n`;
       message += `الاسم: *${fullName}*\n`;
@@ -287,57 +212,57 @@ const CartPage = () => {
       message += `طريقة الدفع: *${paymentMethodText}*\n`;
       
       if (formData.paymentMethod === 'vodafone') {
-        message += `📱 الرقم: ${PAYMENT_METHODS.vodafone.number}\n`;
+        message += `📱 *الرقم للتحويل:* ${PAYMENT_METHODS.vodafone.number}\n`;
       } else if (formData.paymentMethod === 'instapay') {
-        message += `💳 المعرف: ${PAYMENT_METHODS.instapay.username}\n`;
+        message += `💳 *المعرف للتحويل:* ${PAYMENT_METHODS.instapay.username}\n`;
       }
       
       if (notes) {
-        message += `الملاحظات: ${notes}\n`;
+        message += `📌 الملاحظات: ${notes}\n`;
       }
-      message += `\n🛍️ *تفاصيل الطلب:*\n`;
-      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      
+      message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `🛍️ *تفاصيل الطلب:*\n\n`;
       
       state.cart.forEach((item, index) => {
-        message += `\n${index + 1}. *${item.name}*\n`;
-        message += `   الحجم: ${item.size}\n`;
-        message += `   الكمية: ${item.quantity}\n`;
-        message += `   السعر: ${item.price} جنيه\n`;
-        message += `   المجموع: *${item.price * item.quantity} جنيه*\n`;
+        message += `${index + 1}. *${item.name}*\n`;
+        message += `   📏 الحجم: ${item.size}\n`;
+        message += `   🔢 الكمية: ${item.quantity}\n`;
+        message += `   💵 السعر: ${item.price} جنيه\n`;
+        message += `   💰 المجموع: *${item.price * item.quantity} جنيه*\n\n`;
       });
 
-      message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `\n💰 *الإجمالي:*\n`;
-      message += `*${cartTotal} جنيه*\n\n`;
+      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      message += `\n💰 *الإجمالي الكلي: ${cartTotal} جنيه*\n\n`;
       
+      // ⚠️ تنبيه مهم للدفع الإلكتروني
       if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
-        message += `✅ *تم الدفع عبر ${paymentMethodText}*\n`;
-        message += `📸 تم إرفاق صورة الإيصال\n\n`;
+        message += `⚠️ *مهم جداً:*\n`;
+        message += `📸 يرجى إرسال *صورة إيصال الدفع* بعد هذه الرسالة مباشرة\n`;
+        message += `✅ لن يتم تأكيد الطلب إلا بعد استلام الإيصال\n\n`;
       }
       
-      if (sheetsResult.success && sheetsResult.data?.data?.orderId) {
-        message += `\n📊 *Order ID:* ${sheetsResult.data.data.orderId}\n`;
-      }
-      
+      message += `📦 *رقم الطلب:* ${orderNumber}\n`;
+      message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
+      message += `🕐 الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}\n\n`;
       message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}\n`;
-      if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
-        message += `⚠️ *مهم:* يرجى إرسال صورة الإيصال بعد هذه الرسالة\n`;
-      }
-      message += `سيتم التواصل معك قريباً بخصوص الشحن`;
+      message += `📞 سيتم التواصل معك قريباً لتأكيد الطلب`;
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
       
+      // ⚠️ تنبيه قوي للعميل قبل الإرسال
       if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
         dispatch({
           type: 'ADD_NOTIFICATION',
           payload: { 
-            message: '⚠️ لا تنسى إرسال صورة الإيصال في الواتساب!', 
+            message: '⚠️ مهم: بعد الإرسال، يجب إرسال صورة إيصال الدفع على واتساب فوراً!', 
             type: 'warning' 
           }
         });
       }
       
+      // فتح واتساب
       const newWindow = window.open(whatsappUrl, '_blank');
       
       if (!newWindow || newWindow.closed) {
@@ -356,6 +281,7 @@ const CartPage = () => {
 
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // ✅ حفظ بيانات الطلب محلياً فقط (localStorage)
       dispatch({
         type: 'SET_LAST_ORDER',
         payload: {
@@ -366,24 +292,29 @@ const CartPage = () => {
           total: cartTotal,
           customerName: fullName,
           customerPhone: phone,
-          googleSheetsId: sheetsResult.success ? sheetsResult.data?.data?.orderId : null,
-          savedToSheets: sheetsResult.success
+          paymentMethod: paymentMethodText,
+          needsPaymentProof: formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay'
         }
       });
       
+      // مسح السلة
       dispatch({ type: 'CLEAR_CART' });
-      
-      const successMessage = sheetsResult.success 
-        ? '✅ تم إرسال الطلب وحفظه في قاعدة البيانات بنجاح!'
-        : '✅ تم إرسال الطلب بنجاح!';
       
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { message: successMessage, type: 'success' }
+        payload: { message: '✅ تم إرسال الطلب عبر واتساب بنجاح!', type: 'success' }
       });
       
       setIsCheckout(false);
-      setFormData({ firstName: '', lastName: '', phone: '', governorate: '', address: '', notes: '', paymentMethod: '', paymentProof: null });
+      setFormData({ 
+        firstName: '', 
+        lastName: '', 
+        phone: '', 
+        governorate: '', 
+        address: '', 
+        notes: '', 
+        paymentMethod: '' 
+      });
       setLastSubmit(Date.now());
       
       setTimeout(() => {
@@ -394,7 +325,7 @@ const CartPage = () => {
       console.error('Checkout error:', error);
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { message: 'حدث خطأ. تأكد من اتصالك بالإنترنت', type: 'error' }
+        payload: { message: 'حدث خطأ. يرجى المحاولة مرة أخرى', type: 'error' }
       });
     } finally {
       setIsSubmitting(false);
@@ -661,7 +592,7 @@ const CartPage = () => {
                   <div className="space-y-2">
                     {/* فودافون كاش */}
                     <div 
-                      onClick={() => setFormData({...formData, paymentMethod: 'vodafone', paymentProof: null})}
+                      onClick={() => setFormData({...formData, paymentMethod: 'vodafone'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
                         formData.paymentMethod === 'vodafone' 
                           ? 'border-red-500 bg-red-50' 
@@ -679,11 +610,19 @@ const CartPage = () => {
                         <span className="font-bold text-sm">{PAYMENT_METHODS.vodafone.icon} {PAYMENT_METHODS.vodafone.name}</span>
                       </div>
                       <p className="text-xs text-gray-600 mr-6">الرقم: {PAYMENT_METHODS.vodafone.number}</p>
+                      {formData.paymentMethod === 'vodafone' && (
+                        <div className="mt-2 mr-6 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                          <p className="text-xs text-yellow-800 font-bold flex items-center gap-1">
+                            <AlertCircle size={12} />
+                            ⚠️ يجب إرسال صورة الإيصال على واتساب بعد التحويل
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* إنستا باي */}
                     <div 
-                      onClick={() => setFormData({...formData, paymentMethod: 'instapay', paymentProof: null})}
+                      onClick={() => setFormData({...formData, paymentMethod: 'instapay'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
                         formData.paymentMethod === 'instapay' 
                           ? 'border-blue-500 bg-blue-50' 
@@ -706,15 +645,23 @@ const CartPage = () => {
                         target="_blank" 
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-blue-600 underline mr-6 hover:text-blue-800"
+                        className="text-xs text-blue-600 underline mr-6 hover:text-blue-800 inline-block mt-1"
                       >
                         اضغط هنا للدفع
                       </a>
+                      {formData.paymentMethod === 'instapay' && (
+                        <div className="mt-2 mr-6 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                          <p className="text-xs text-yellow-800 font-bold flex items-center gap-1">
+                            <AlertCircle size={12} />
+                            ⚠️ يجب إرسال صورة الإيصال على واتساب بعد الدفع
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* الدفع عند الاستلام */}
                     <div 
-                      onClick={() => setFormData({...formData, paymentMethod: 'cash', paymentProof: null})}
+                      onClick={() => setFormData({...formData, paymentMethod: 'cash'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
                         formData.paymentMethod === 'cash' 
                           ? 'border-green-500 bg-green-50' 
@@ -736,52 +683,33 @@ const CartPage = () => {
                   {errors.paymentMethod && <p className="text-red-500 text-xs mt-1">{errors.paymentMethod}</p>}
                 </div>
 
-                {/* رفع صورة الإيصال */}
+                {/* ⚠️ تحذير نهائي قبل الإرسال */}
                 {(formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2">
-                      صورة الإيصال * 
-                      <span className="text-gray-500 font-normal mr-1">(إلزامي)</span>
-                    </label>
-                    
-                    {!formData.paymentProof ? (
-                      <label className="block">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                        <div className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-all hover:border-green-500 hover:bg-green-50 ${errors.paymentProof ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}>
-                          <Upload size={24} className="mx-auto mb-2 text-gray-400" />
-                          <p className="text-xs text-gray-600 font-bold mb-1">اضغط لرفع صورة الإيصال</p>
-                          <p className="text-xs text-gray-400">PNG, JPG, JPEG (حد أقصى 5 ميجا)</p>
-                        </div>
-                      </label>
-                    ) : (
-                      <div className="border-2 border-green-500 rounded-xl p-3 bg-green-50">
-                        <div className="flex items-center gap-3">
-                          <FileImage size={24} className="text-green-600" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-green-800">تم رفع الصورة بنجاح</p>
-                            <p className="text-xs text-green-600">جاهزة للإرسال</p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setFormData({...formData, paymentProof: null})}
-                            className="text-red-500 hover:bg-red-100 p-1 rounded-lg transition-all"
-                          >
-                            <X size={16} />
-                          </button>
-                        </div>
-                        <img 
-                          src={formData.paymentProof} 
-                          alt="إيصال الدفع" 
-                          className="mt-2 w-full h-32 object-cover rounded-lg"
-                        />
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle size={24} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="font-bold text-yellow-900 text-sm mb-2">📸 تنبيه مهم جداً:</h3>
+                        <ul className="text-xs text-yellow-800 space-y-1">
+                          <li className="flex items-start gap-1">
+                            <span className="font-bold">1️⃣</span>
+                            <span>بعد الضغط على "إتمام الطلب" سيفتح واتساب</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="font-bold">2️⃣</span>
+                            <span>قم بالتحويل للرقم/المعرف المذكور أعلاه</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="font-bold">3️⃣</span>
+                            <span className="font-bold text-red-600">أرسل صورة إيصال الدفع فوراً على واتساب</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="font-bold">4️⃣</span>
+                            <span>الطلب لن يتم تأكيده إلا بعد استلام الإيصال</span>
+                          </li>
+                        </ul>
                       </div>
-                    )}
-                    {errors.paymentProof && <p className="text-red-500 text-xs mt-1">{errors.paymentProof}</p>}
+                    </div>
                   </div>
                 )}
 
@@ -803,7 +731,7 @@ const CartPage = () => {
                   >
                     {isSubmitting ? (
                       <>
-                        <LoadingSpinner size="sm" />
+                        <LoadingSpinner size={16} />
                         جاري الإرسال...
                       </>
                     ) : (
@@ -821,18 +749,22 @@ const CartPage = () => {
       </div>
 
       {/* Confirm Delete Modal */}
-      {itemToDelete && (
-        <ConfirmModal
-          isOpen={!!itemToDelete}
-          onClose={() => setItemToDelete(null)}
-          onConfirm={confirmDelete}
-          title="حذف المنتج"
-          message={`هل أنت متأكد من حذف "${itemToDelete.name}" من السلة؟`}
-          confirmText="حذف"
-          cancelText="إلغاء"
-          type="danger"
-        />
-      )}
+      <ConfirmModal
+        isOpen={!!itemToDelete}
+        title="حذف المنتج"
+        message={
+          <div>
+            <p>هل أنت متأكد من حذف</p>
+            <p className="font-bold text-red-600 mt-1">"{itemToDelete?.name}"</p>
+            <p>من السلة؟</p>
+          </div>
+        }
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        onConfirm={confirmDelete}
+        onCancel={() => setItemToDelete(null)}
+        type="danger"
+      />
     </div>
   );
 };
