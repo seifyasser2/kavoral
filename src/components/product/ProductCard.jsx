@@ -1,3 +1,5 @@
+// src/components/product/ProductCard.jsx
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { Heart, Star, Plus, Minus, ShoppingCart, Eye } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
@@ -74,7 +76,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <article 
-      className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden h-full flex flex-col border border-gray-100"
+      className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden h-full flex flex-col border-2 border-gray-100 hover:border-green-200"
     >
       {/* Image Section */}
       <div className="relative mb-2 md:mb-3">
@@ -114,32 +116,33 @@ const ProductCard = ({ product }) => {
         {/* Badges */}
         <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10 gap-1">
           <div className="flex flex-col gap-1">
-            {/* {product.featured && (
-              <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                ⭐
-              </span>
-            )} */}
             {hasDiscount && (
-              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
                 خصم {product.totalDiscountPercentage}%
               </span>
             )}
           </div>
           
-          {/* Wishlist */}
+          {/* ✅ Wishlist Button - بدون دائرة */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               toggleWishlist(product);
             }}
-            className={`w-6 h-6 rounded-full transition-all flex-shrink-0 flex items-center justify-center ${
+            className={`p-1.5 transition-all transform hover:scale-110 active:scale-95 ${
               isInWishlist 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white/80 text-gray-600 hover:text-red-500 hover:bg-white'
+                ? 'text-red-500' 
+                : 'text-gray-400 hover:text-red-500'
             }`}
             title={isInWishlist ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+            aria-label={isInWishlist ? "إزالة من المفضلة" : "إضافة للمفضلة"}
           >
-            <Heart size={18} fill={isInWishlist ? 'currentColor' : 'none'} strokeWidth={2} />
+            <Heart 
+              size={20} 
+              fill={isInWishlist ? 'currentColor' : 'none'} 
+              strokeWidth={2.5}
+              className="drop-shadow-md"
+            />
           </button>
         </div>
       </div>
@@ -150,32 +153,33 @@ const ProductCard = ({ product }) => {
           className="cursor-pointer mb-2 md:mb-3 flex-grow"
           onClick={handleViewDetails}
         >
-          <h3 className="text-xs md:text-sm font-bold text-gray-800 mb-0.5 md:mb-1 line-clamp-2 leading-tight">
+          {/* ✅ اسم المنتج - خط عريض وواضح */}
+          <h3 className="text-sm md:text-base font-black text-gray-900 mb-1 line-clamp-2 leading-tight">
             {product.name}
           </h3>
           
-          <p className="text-xs text-gray-500 mb-1 md:mb-2">{product.size}</p>
+          <p className="text-xs text-gray-600 mb-1 md:mb-2 font-semibold">{product.size}</p>
 
           {/* Rating */}
           <div className="flex items-center gap-0.5 md:gap-1 mb-1 md:mb-2">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                size={10}
+                size={12}
                 className={i < Math.floor(product.rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}
               />
             ))}
-            <span className="text-xs text-gray-600 mr-0.5">{product.rating}</span>
+            <span className="text-xs text-gray-700 mr-0.5 font-bold">{product.rating}</span>
           </div>
 
-          {/* Price */}
-         <div className="bg-green-50 border border-green-100 rounded-lg p-1.5 md:p-2 mb-2 md:mb-3">
+          {/* Price - خط عريض */}
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-2 md:p-2.5 mb-2 md:mb-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm md:text-base font-bold text-green-700">
+              <span className="text-base md:text-lg font-black text-green-700">
                 {product.price} ج
               </span>
               {hasDiscount && (
-                <span className="text-xs text-gray-700 line-through font-semibold">
+                <span className="text-xs text-gray-600 line-through font-bold">
                   {product.originalPrice} ج
                 </span>
               )}
@@ -183,38 +187,40 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* Quantity Selector */}
-        <div className="bg-gray-50 rounded-lg p-1.5 md:p-2 mb-1.5 md:mb-2">
-          <div className="flex items-center justify-between mb-1.5 md:mb-2">
-            <span className="text-xs font-semibold text-gray-700">الكمية:</span>
-            <div className="flex items-center gap-1">
+        {/* ✅ Quantity Selector - مظبوط للموبايل */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-2 mb-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black text-gray-800">الكمية:</span>
+            <div className="flex items-center gap-1.5">
               <button
                 onClick={() => handleUpdateQuantity(-1)}
                 disabled={localQuantity <= 0}
-                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-green-500 disabled:opacity-50 flex items-center justify-center transition-colors text-gray-600"
+                className="w-7 h-7 rounded-lg bg-white border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 touch-action-manipulation"
                 type="button"
+                aria-label="تقليل الكمية"
               >
-                <Minus size={12} />
+                <Minus size={10} strokeWidth={3} className="text-gray-700" />
               </button>
               
-              <span className="text-sm md:text-base font-bold w-6 md:w-8 text-center text-green-600">
+              <span className="text-base font-black w-8 text-center text-green-700">
                 {localQuantity}
               </span>
               
               <button
                 onClick={() => handleUpdateQuantity(1)}
                 disabled={!product.inStock}
-                className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-white border border-gray-200 hover:border-green-500 disabled:opacity-50 flex items-center justify-center transition-colors text-gray-600"
+                className="w-7 h-7 rounded-lg bg-white border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 touch-action-manipulation"
                 type="button"
+                aria-label="زيادة الكمية"
               >
-                <Plus size={12} />
+                <Plus size={10} strokeWidth={3} className="text-gray-700 rounded" />
               </button>
             </div>
           </div>
 
           {localQuantity > 0 && (
-            <div className="text-center pt-1 md:pt-2 border-t border-gray-200">
-              <span className="text-green-600 font-bold text-xs md:text-sm">
+            <div className="text-center pt-1.5 border-t-2 border-gray-200">
+              <span className="text-green-700 font-black text-sm">
                 {localQuantity * product.price} ج
               </span>
             </div>
@@ -222,36 +228,38 @@ const ProductCard = ({ product }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-1 md:gap-2">
+        <div className="flex gap-1.5 md:gap-2">
           <button
             onClick={handleViewDetails}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 md:py-2 px-1.5 md:px-2 rounded-lg transition-colors font-semibold text-xs flex items-center justify-center gap-0.5"
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-2 rounded-xl transition-all font-bold text-xs flex items-center justify-center gap-1 border-2 border-gray-200 hover:border-gray-300 active:scale-95"
             type="button"
+            aria-label="عرض التفاصيل"
           >
-            <Eye size={12} />
+            <Eye size={14} strokeWidth={2.5} />
             <span className="hidden sm:inline">عرض</span>
           </button>
           
           <button
             onClick={handleAddToCart}
             disabled={localQuantity <= 0 || !product.inStock || isAdding}
-            className={`flex-[2] py-1.5 md:py-2 px-1.5 md:px-2 rounded-lg transition-all font-bold text-xs flex items-center justify-center gap-0.5 ${
+            className={`flex-[2] py-2 px-2 rounded-xl transition-all font-black text-xs flex items-center justify-center gap-1 border-2 active:scale-95 ${
               isAdding
-                ? 'bg-green-500 text-white'
+                ? 'bg-green-500 text-white border-green-600'
                 : localQuantity <= 0 || !product.inStock
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-500 text-white hover:bg-green-600'
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-300'
+                  : 'bg-green-500 text-white hover:bg-green-600 border-green-600 shadow-lg hover:shadow-xl'
             }`}
             type="button"
+            aria-label="أضف للسلة"
           >
             {isAdding ? (
               <>
-                <div className="w-2 h-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>...</span>
               </>
             ) : (
               <>
-                <ShoppingCart size={12} />
+                <ShoppingCart size={14} strokeWidth={2.5} />
                 <span>أضف</span>
               </>
             )}
