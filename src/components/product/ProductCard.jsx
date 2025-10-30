@@ -1,14 +1,14 @@
 // src/components/product/ProductCard.jsx
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { Heart, Star, Plus, Minus, ShoppingCart, Eye } from 'lucide-react';
+import { Heart, Star, ShoppingCart, Eye } from 'lucide-react'; // تم إزالة Plus و Minus
 import { useAppContext } from '../../context/AppContext';
 
-const MAX_QUANTITY = 100;
+// تم إزالة MAX_QUANTITY
 
 const ProductCard = ({ product }) => {
   const { state, dispatch, toggleWishlist, navigateTo } = useAppContext();
-  const [localQuantity, setLocalQuantity] = useState(0);
+  // تم إزالة [localQuantity, setLocalQuantity]
   const [isAdding, setIsAdding] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -22,18 +22,10 @@ const ProductCard = ({ product }) => {
     [product.originalPrice, product.price]
   );
 
-  const handleUpdateQuantity = useCallback((change) => {
-    setLocalQuantity(prev => Math.max(0, Math.min(MAX_QUANTITY, prev + change)));
-  }, []);
+  // تم إزالة handleUpdateQuantity
 
   const handleAddToCart = useCallback(async () => {
-    if (localQuantity <= 0) {
-      dispatch({
-        type: 'ADD_NOTIFICATION',
-        payload: { message: 'يرجى تحديد الكمية أولاً', type: 'warning' }
-      });
-      return;
-    }
+    // تم إزالة فحص localQuantity > 0
 
     if (!product.inStock) {
       dispatch({
@@ -45,8 +37,7 @@ const ProductCard = ({ product }) => {
 
     setIsAdding(true);
     
-    const quantityToAdd = localQuantity;
-    setLocalQuantity(0);
+    const quantityToAdd = 1; // ثابتة الآن = 1
 
     await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -61,13 +52,13 @@ const ProductCard = ({ product }) => {
     dispatch({
       type: 'ADD_NOTIFICATION',
       payload: { 
-        message: `✅ تم إضافة ${quantityToAdd} × ${product.name}`, 
+        message: `✅ تم إضافة ${product.name} إلى السلة`, // تعديل رسالة الإشعار
         type: 'success' 
       }
     });
 
     setIsAdding(false);
-  }, [localQuantity, product, dispatch]);
+  }, [product, dispatch]); // تم إزالة localQuantity من الاعتماديات
 
   const handleViewDetails = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: product });
@@ -113,17 +104,10 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
         
-        {/* Badges */}
+        {/* Badges and Wishlist Button */}
         <div className="absolute top-2 left-2 right-2 flex justify-between items-start z-10 gap-1">
-          <div className="flex flex-col gap-1">
-            {hasDiscount && (
-              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
-                خصم {product.totalDiscountPercentage}%
-              </span>
-            )}
-          </div>
           
-          {/* ✅ Wishlist Button - بدون دائرة */}
+          {/* Wishlist Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -144,16 +128,25 @@ const ProductCard = ({ product }) => {
               className="drop-shadow-md"
             />
           </button>
+
+          {/* Badges (خصم) */}
+          <div className="flex flex-col gap-1">
+            {hasDiscount && (
+              <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                خصم {product.totalDiscountPercentage}%
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Product Info */}
       <div className="px-2 md:px-3 pb-2 md:pb-3 flex-grow flex flex-col">
         <div 
-          className="cursor-pointer mb-2 md:mb-3 flex-grow"
+          className="cursor-pointer mb-3 flex-grow" // تم تعديل margin-bottom ليصبح 3 بعد إزالة الكمية
           onClick={handleViewDetails}
         >
-          {/* ✅ اسم المنتج - خط عريض وواضح */}
+          {/* اسم المنتج - خط عريض وواضح */}
           <h3 className="text-sm md:text-base font-black text-gray-900 mb-1 line-clamp-2 leading-tight">
             {product.name}
           </h3>
@@ -173,7 +166,7 @@ const ProductCard = ({ product }) => {
           </div>
 
           {/* Price - خط عريض */}
-          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-2 md:p-2.5 mb-2 md:mb-3">
+          <div className="bg-green-50 border-2 border-green-200 rounded-xl p-2 md:p-2.5"> {/* تم إزالة mb-2/mb-3 */}
             <div className="flex items-center justify-between">
               <span className="text-base md:text-lg font-black text-green-700">
                 {product.price} ج
@@ -187,48 +180,10 @@ const ProductCard = ({ product }) => {
           </div>
         </div>
 
-        {/* ✅ Quantity Selector - مظبوط للموبايل */}
-        <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-2 mb-2">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-gray-800">الكمية:</span>
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => handleUpdateQuantity(-1)}
-                disabled={localQuantity <= 0}
-                className="w-7 h-7 rounded-lg bg-white border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 touch-action-manipulation"
-                type="button"
-                aria-label="تقليل الكمية"
-              >
-                <Minus size={10} strokeWidth={3} className="text-gray-700" />
-              </button>
-              
-              <span className="text-base font-black w-8 text-center text-green-700">
-                {localQuantity}
-              </span>
-              
-              <button
-                onClick={() => handleUpdateQuantity(1)}
-                disabled={!product.inStock}
-                className="w-7 h-7 rounded-lg bg-white border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 touch-action-manipulation"
-                type="button"
-                aria-label="زيادة الكمية"
-              >
-                <Plus size={10} strokeWidth={3} className="text-gray-700 rounded" />
-              </button>
-            </div>
-          </div>
-
-          {localQuantity > 0 && (
-            <div className="text-center pt-1.5 border-t-2 border-gray-200">
-              <span className="text-green-700 font-black text-sm">
-                {localQuantity * product.price} ج
-              </span>
-            </div>
-          )}
-        </div>
+        {/* تم إزالة قسم Quantity Selector بالكامل من هنا */}
 
         {/* Action Buttons */}
-        <div className="flex gap-1.5 md:gap-2">
+        <div className="flex gap-1.5 md:gap-2 pt-3 border-t-2 border-gray-100"> {/* إضافة فاصل علوي لتعويض المساحة */}
           <button
             onClick={handleViewDetails}
             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-2 rounded-xl transition-all font-bold text-xs flex items-center justify-center gap-1 border-2 border-gray-200 hover:border-gray-300 active:scale-95"
@@ -239,13 +194,14 @@ const ProductCard = ({ product }) => {
             <span className="hidden sm:inline">عرض</span>
           </button>
           
+          {/* زر أضف للسلة - يعمل الآن لإضافة 1 فقط */}
           <button
             onClick={handleAddToCart}
-            disabled={localQuantity <= 0 || !product.inStock || isAdding}
+            disabled={!product.inStock || isAdding}
             className={`flex-[2] py-2 px-2 rounded-xl transition-all font-black text-xs flex items-center justify-center gap-1 border-2 active:scale-95 ${
               isAdding
                 ? 'bg-green-500 text-white border-green-600'
-                : localQuantity <= 0 || !product.inStock
+                : !product.inStock
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-gray-300'
                   : 'bg-green-500 text-white hover:bg-green-600 border-green-600 shadow-lg hover:shadow-xl'
             }`}
@@ -260,7 +216,7 @@ const ProductCard = ({ product }) => {
             ) : (
               <>
                 <ShoppingCart size={14} strokeWidth={2.5} />
-                <span>أضف</span>
+                <span>أضف للسلة</span> {/* تعديل النص */}
               </>
             )}
           </button>
