@@ -118,8 +118,8 @@ const ProductDetailsPage = () => {
                       </span>
                     )}
                     {hasDiscount && (
-                      <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
-                        -{product.totalDiscountPercentage}%
+                      <span className="bg-red-700 text-white text-xs sm:text-sm font-bold px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                        خصم {product.totalDiscountPercentage}%
                       </span>
                     )}
                   </div>
