@@ -20,7 +20,7 @@ const bundlesRawData = [
     description:
       "تركيبة متخصصة: الروزماري + بذور اليقطين + الخروع - لإيقاف التساقط الوراثي وتحفيز نمو شعر جديد.",
     image:
-      "https://res.cloudinary.com/dl9rygqx6/image/upload/v1761910658/1761908961493_bhpmcj.png",
+      "https://res.cloudinary.com/dl9rygqx6/image/upload/v1761915418/IMG_20251031_125748_bkoeht.jpg",
     imageAlt: "🌱",
     products: [8, 14, 9],
     productNames: [

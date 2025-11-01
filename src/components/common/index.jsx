@@ -217,6 +217,10 @@ export const SectionHeader = ({ title, subtitle, icon: Icon, className = '' }) =
   </div>
 );
 
+
+
+ export { default as PWAInstallPrompt } from './PWAInstallPrompt';
+
 // ============================================
 // CUSTOM CSS ANIMATIONS
 // ============================================

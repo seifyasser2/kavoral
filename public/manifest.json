@@ -1,7 +1,7 @@
 {
   "short_name": "Kavoral",
   "name": "Kavoral - كافورال متجر الزيوت الطبيعية",
-  "description": " متجر زيوت طبيعية معصورة على البارد . منتجات طبيعية 100% للعناية بالشعر والبشرة",
+  "description": "متجر زيوت طبيعية معصورة على البارد. منتجات طبيعية 100% للعناية بالشعر والبشرة",
   "icons": [
     {
       "src": "favicon.ico",
@@ -34,7 +34,9 @@
     {
       "src": "/screenshot1.png",
       "type": "image/png",
-      "sizes": "540x720"
+      "sizes": "540x720",
+      "form_factor": "narrow"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

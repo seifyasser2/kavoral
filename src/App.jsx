@@ -8,6 +8,7 @@ import { MessageCircle } from "lucide-react";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { Z_INDEX } from "./constants";
 import { getWhatsAppLink } from "./data/config";
+import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 // ❌ احذف هذا السطر:
 // import BundleDetailsPage from './pages/BundleDetailsPage';
 
@@ -376,6 +377,7 @@ const App = () => {
     <ErrorBoundary>
       <AppProvider>
         <AppContent />
+      <PWAInstallPrompt />
       </AppProvider>
     </ErrorBoundary>
   );
