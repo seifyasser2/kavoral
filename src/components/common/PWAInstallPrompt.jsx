@@ -20,7 +20,7 @@ const PWAInstallPrompt = () => {
 
     // ✅ NEW: التحقق من آخر مرة ظهر فيها البانر
     const lastPromptDate = localStorage.getItem('pwa_prompt_last_shown');
-    const DAYS_TO_WAIT = 7; // يظهر كل 7 أيام
+    const DAYS_TO_WAIT = 100; // يظهر كل 7 أيام
     
     if (lastPromptDate) {
       const daysSinceLastPrompt = Math.floor(
