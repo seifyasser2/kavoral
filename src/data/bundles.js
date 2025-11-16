@@ -28,7 +28,7 @@ const bundlesRawData = [
       "زيت بذور اليقطين",
       "زيت الخروع",
     ],
-    discountPercentage: 48, // خصم خاص للباقة الأكثر طلباً
+    discountPercentage: 0, // خصم خاص للباقة الأكثر طلباً
     category: "hair-growth",
     featured: true,
     ratings: 4.95,
@@ -77,7 +77,7 @@ const bundlesRawData = [
       "زيت اللوز الحلو",
       "زيت الجوجوبا",
     ],
-    discountPercentage: 47, // باقة بريميوم - خصم مميز
+    discountPercentage: 0, // باقة بريميوم - خصم مميز
     category: "anti-aging",
     featured: true,
     ratings: 4.92,
@@ -129,7 +129,7 @@ const bundlesRawData = [
       "زيت اللوز الحلو",
       "زيت الجوجوبا",
     ],
-    discountPercentage: 46, // الأكثر مبيعاً - خصم جذاب
+    discountPercentage: 0, // الأكثر مبيعاً - خصم جذاب
     category: "hair-care",
     featured: true,
     ratings: 4.88,
@@ -174,7 +174,7 @@ const bundlesRawData = [
     imageAlt: "👨‍🦰",
     products: [10, 6, 7],
     productNames: ["زيت الأرغان ", "زيت الجوجوبا", "زيت اللوز الحلو"],
-    discountPercentage: 45, // خصم عام
+    discountPercentage: 0, // خصم عام
     category: "beard-care",
     featured: true,
     ratings: 4.9,
@@ -224,7 +224,7 @@ const bundlesRawData = [
       "زيت الجرجير",
       "زيت الخروع",
     ],
-    discountPercentage: 47, // باقة قوية - خصم مميز
+    discountPercentage: 0, // باقة قوية - خصم مميز
     category: "hair-growth",
     featured: true,
     ratings: 4.93,
@@ -268,7 +268,7 @@ const bundlesRawData = [
     imageAlt: "🌿",
     products: [12, 13, 6],
     productNames: ["زيت شجرة الشاي", "زيت اللافندر", "زيت الجوجوبا"],
-    discountPercentage: 45, // خصم عام
+    discountPercentage: 0, // خصم عام
     category: "skin-care",
     featured: false,
     ratings: 4.9,
