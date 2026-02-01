@@ -4,7 +4,6 @@ import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 import BottomNav from "./components/common/BottomNav";
 import { Notification, GlobalStyles } from "./components/common";
-// import { MessageCircle } from "lucide-react";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { Z_INDEX } from "./constants";
 import { getWhatsAppLink } from "./data/config";
@@ -200,11 +199,10 @@ const AppContent = () => {
     >
       <Header />
 
-      {/* ✅ CRITICAL: Main with proper scroll setup */}
-      <main role="main" className="flex-1 w-full overflow-y-auto overflow-x-hidden" style={{ 
+      {/* ✅ FIX: Main بدون overflow hidden */}
+      <main role="main" className="flex-1 w-full" style={{ 
         paddingTop: "80px",
         marginTop: "0",
-        height: "auto",
         minHeight: "calc(100vh - 80px)"
       }}>
         <Suspense fallback={<PageLoadingFallback />}>
@@ -232,140 +230,6 @@ const AppContent = () => {
       </div>
 
       <GlobalStyles />
-
-      {/* ✅ CRITICAL CSS FIX */}
-      <style jsx global>{`
-        /* ✅ BASE: السماح بالـ scroll على الـ HTML و Body */
-        html {
-          height: 100%;
-          overflow-y: auto;
-          scroll-behavior: smooth;
-          -webkit-text-size-adjust: 100%;
-          text-size-adjust: 100%;
-        }
-
-        body {
-          height: 100%;
-          overflow: visible;
-          overflow-x: hidden;
-          position: static;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-          overscroll-behavior-y: none;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-
-        /* ✅ HEADER: ثابت بدون تأثير على الـ scroll */
-        header {
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          right: 0 !important;
-          width: 100% !important;
-          z-index: 1000 !important;
-          transform: translateZ(0);
-          backface-visibility: hidden;
-          will-change: transform;
-        }
-
-        /* ✅ MAIN: السماح بالـ scroll بشكل كامل */
-        main {
-          overflow-y: auto !important;
-          overflow-x: hidden !important;
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-          width: 100%;
-        }
-
-        /* ✅ ROOT: Flex container */
-        #root {
-          display: flex;
-          flex-direction: column;
-          min-height: 100vh;
-        }
-
-        /* ✅ منع Scroll عند فتح Modal فقط */
-        body.modal-open {
-          overflow: hidden !important;
-          position: fixed;
-          width: 100vw;
-          height: 100vh;
-          touch-action: none;
-        }
-
-        body.modal-open main {
-          overflow: hidden !important;
-        }
-
-        /* ✅ Scrollbar styling */
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-          background: #f1f5f9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-          background: #22c55e;
-          border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-          background: #16a34a;
-        }
-
-        /* ✅ Touch optimization */
-        @media (max-width: 768px) {
-          html {
-            overflow-y: auto;
-          }
-
-          body {
-            overflow: visible;
-          }
-
-          main {
-            padding-bottom: 84px !important;
-          }
-
-          input, textarea, select {
-            font-size: 16px !important;
-          }
-        }
-
-        /* ✅ Animations */
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.3s ease-out;
-        }
-
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-
-        .animate-shimmer {
-          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
-          background-size: 200% 100%;
-          animation: shimmer 2s infinite;
-        }
-
-        /* ✅ Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation-duration: 0.01ms !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
-      `}</style>
     </div>
   );
 };

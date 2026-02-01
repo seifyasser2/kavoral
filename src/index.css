@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================
-   GLOBAL RESETS & BASE - محسّن للموبايل ✅
+   GLOBAL RESETS & BASE - إصلاح الـ Scroll ✅
    ============================================ */
 
 * {
@@ -13,21 +13,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ✅ FIX: السماح بالـ scroll بشكل كامل */
 html {
   scroll-behavior: smooth;
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  height: 100%;
+  overflow-y: auto !important; /* ✅ CRITICAL */
   overflow-x: hidden;
 }
 
 html, body {
-  overflow-x: hidden;
   max-width: 100vw;
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none;
 }
 
 body {
@@ -37,10 +38,22 @@ body {
   color: #1f2937;
   line-height: 1.6;
   min-height: 100vh;
+  height: auto; /* ✅ CHANGED from 100% */
+  overflow-x: hidden;
+  overflow-y: auto !important; /* ✅ CRITICAL */
+}
+
+/* ✅ FIX: منع أي تعارض في الـ overflow */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: visible; /* ✅ CRITICAL */
 }
 
 /* ============================================
-   HEADER - ثابت ونظيف ✅
+   HEADER - ثابت بدون تأثير على الـ scroll ✅
    ============================================ */
 
 header {
@@ -55,12 +68,14 @@ header {
   backface-visibility: hidden;
 }
 
+/* ✅ FIX: Main بدون overflow hidden */
 main {
   padding-top: 80px;
   min-height: calc(100vh - 80px);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible !important; /* ✅ CRITICAL */
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -69,6 +84,18 @@ main {
     padding-bottom: 84px;
     min-height: calc(100vh - 64px - 84px);
   }
+}
+
+/* ============================================
+   MODAL - منع scroll على body فقط عند الفتح ✅
+   ============================================ */
+
+/* ✅ FIX: استخدام overflow فقط، بدون position: fixed */
+body.modal-open {
+  overflow: hidden !important;
+  /* ❌ REMOVED: position: fixed */
+  /* ❌ REMOVED: width: 100vw */
+  touch-action: none;
 }
 
 /* ============================================
@@ -322,17 +349,6 @@ input:-webkit-autofill:focus {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-/* ============================================
-   MODAL ✅
-   ============================================ */
-
-body.modal-open {
-  overflow: hidden !important;
-  position: fixed;
-  width: 100%;
-  touch-action: none;
 }
 
 /* ============================================
