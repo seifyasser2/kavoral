@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================
-   GLOBAL RESETS & BASE - محسّن للموبايل
+   GLOBAL RESETS & BASE - محسّن للموبايل ✅
    ============================================ */
 
 * {
@@ -15,17 +15,10 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px;
   font-size: 16px;
-  /* ✅ FIX: منع التكبير التلقائي على iOS */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-}
-
-@media (max-width: 768px) {
-  html {
-    scroll-padding-top: 64px;
-  }
+  overflow-x: hidden;
 }
 
 html, body {
@@ -34,6 +27,7 @@ html, body {
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -43,8 +37,6 @@ body {
   color: #1f2937;
   line-height: 1.6;
   min-height: 100vh;
-  /* ✅ FIX: منع السحب الزائد على iOS */
-  overscroll-behavior-y: none;
 }
 
 /* ============================================
@@ -56,10 +48,9 @@ header {
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  transform: none !important;
+  transform: translateZ(0);
   width: 100%;
   z-index: 1000 !important;
-  /* ✅ منع الاهتزاز عند السكرول */
   will-change: transform;
   backface-visibility: hidden;
 }
@@ -67,13 +58,16 @@ header {
 main {
   padding-top: 80px;
   min-height: calc(100vh - 80px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 @media (max-width: 768px) {
   main {
     padding-top: 64px;
-    /* ✅ FIX: مساحة للـ BottomNav */
     padding-bottom: 84px;
+    min-height: calc(100vh - 64px - 84px);
   }
 }
 
@@ -138,12 +132,10 @@ select:focus-visible {
    ============================================ */
 
 @media (max-width: 768px) {
-  /* ✅ حجم خط مناسب للقراءة */
   html {
     font-size: 15px;
   }
 
-  /* ✅ حد أدنى لحجم اللمس (44x44 Apple Guidelines) */
   button, 
   a, 
   input[type="checkbox"], 
@@ -153,20 +145,17 @@ select:focus-visible {
     min-width: 44px;
   }
 
-  /* ✅ منع zoom عند focus على inputs */
   input, 
   textarea, 
   select {
     font-size: 16px !important;
   }
 
-  /* ✅ padding للشاشات المنحنية (Safe Area) */
   body {
     padding-left: max(0px, env(safe-area-inset-left));
     padding-right: max(0px, env(safe-area-inset-right));
   }
 
-  /* ✅ تحسين سرعة السكرول على الموبايل */
   * {
     -webkit-overflow-scrolling: touch;
   }
@@ -180,7 +169,6 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
-  /* ✅ تحسين جودة الصور على الموبايل */
   image-rendering: -webkit-optimize-contrast;
 }
 
@@ -195,7 +183,6 @@ button {
   transition: all 0.2s ease;
   border: none;
   outline: none;
-  /* ✅ منع Double-tap zoom على iOS */
   touch-action: manipulation;
 }
 
@@ -218,7 +205,6 @@ select {
   transition: all 0.2s ease;
   background-color: #ffffff;
   border-radius: 12px;
-  /* ✅ تحسين الأداء */
   will-change: border-color;
 }
 
@@ -235,7 +221,6 @@ textarea::placeholder {
   opacity: 1;
 }
 
-/* ✅ تحسين Autofill على Chrome/Safari */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -244,7 +229,7 @@ input:-webkit-autofill:focus {
 }
 
 /* ============================================
-   ANIMATIONS - خفيفة وسريعة ✅
+   ANIMATIONS ✅
    ============================================ */
 
 @keyframes fade-in {
@@ -301,7 +286,6 @@ input:-webkit-autofill:focus {
   animation: slide-down 0.3s ease-out;
 }
 
-/* ✅ تقليل الحركة للمستخدمين الحساسين */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -348,12 +332,11 @@ body.modal-open {
   overflow: hidden !important;
   position: fixed;
   width: 100%;
-  /* ✅ FIX: منع السكرول تحت الـ modal */
   touch-action: none;
 }
 
 /* ============================================
-   SAFE AREAS (للهواتف الحديثة) ✅
+   SAFE AREAS ✅
    ============================================ */
 
 .safe-area-bottom {
@@ -417,10 +400,9 @@ body.modal-open {
 }
 
 /* ============================================
-   ACCESSIBILITY IMPROVEMENTS ✅
+   ACCESSIBILITY ✅
    ============================================ */
 
-/* Hide visually but keep for screen readers */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -433,7 +415,6 @@ body.modal-open {
   border-width: 0;
 }
 
-/* Skip to main content link */
 .skip-link {
   position: absolute;
   top: -40px;
@@ -450,10 +431,9 @@ body.modal-open {
 }
 
 /* ============================================
-   PERFORMANCE OPTIMIZATIONS ✅
+   PERFORMANCE ✅
    ============================================ */
 
-/* GPU acceleration للعناصر المتحركة */
 .gpu-accelerated {
   transform: translateZ(0);
   will-change: transform;
@@ -462,33 +442,11 @@ body.modal-open {
   perspective: 1000;
 }
 
-/* ============================================
-   تعديلات نهائية - Final Touch ✅
-   ============================================ */
-
-/* منع تكبير الصور بشكل مفرط */
 img[loading="lazy"] {
   min-height: 1px;
 }
 
-/* تحسين أداء الظلال */
 .shadow-optimized {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   will-change: box-shadow;
 }
-
-/* 
-✅ التعديلات المطبقة:
-1. إصلاح مشاكل السكرول على iOS
-2. تحسين Touch Targets (44x44px)
-3. منع Zoom على Inputs
-4. Safe Area Support للهواتف الحديثة
-5. تحسين الأداء بـ GPU Acceleration
-6. إصلاح Modal Scroll Lock
-7. تحسين Accessibility
-8. دعم Print Styles
-9. Skeleton Loading States
-10. تحسين الـ Animations
-
-المشروع الآن جاهز لـ 100% Mobile Responsiveness! 🎉
-*/
