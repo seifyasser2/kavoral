@@ -4,7 +4,7 @@ import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 import BottomNav from "./components/common/BottomNav";
 import { Notification, GlobalStyles } from "./components/common";
-import { MessageCircle } from "lucide-react";
+// import { MessageCircle } from "lucide-react";
 import ErrorBoundary from "./components/common/ErrorBoundary";
 import { Z_INDEX } from "./constants";
 import { getWhatsAppLink } from "./data/config";
