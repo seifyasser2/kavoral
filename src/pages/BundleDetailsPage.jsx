@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  X, Check, Plus, Minus, ShoppingCart, Package, Zap, 
-  Star, Heart, Sparkles, ChevronDown, Info, Award
-} from 'lucide-react';
+import { X, Check, Plus, Minus, ShoppingCart, Package, Star, Sparkles, Info, Award } from 'lucide-react';
+
 import { useAppContext } from '../context/AppContext';
 import { getProductById } from '../data/products';
 
@@ -28,7 +26,7 @@ const BundleDetailsPage = () => {
       document.body.style.overflow = 'unset';
       document.body.classList.remove('modal-open');
     };
-  }, [bundle]);
+  }, [bundle, closeModal]);
 
   const closeModal = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_BUNDLE', payload: null });
@@ -77,13 +75,7 @@ const BundleDetailsPage = () => {
     setLocalQuantity(0);
   }, [localQuantity, bundle, dispatch]);
 
-  const handleToggleWishlist = useCallback(() => {
-    dispatch({ type: 'TOGGLE_WISHLIST', payload: bundle });
-  }, [bundle, dispatch]);
 
-  if (!bundle) return null;
-
-  const isInWishlist = state.wishlist.some(item => item.id === bundle.id);
   const bundleProducts = bundle.products.map(id => getProductById(id)).filter(p => p !== null);
 
   return (
@@ -278,7 +270,7 @@ const BundleDetailsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {bundleProducts.map((product) => {
                 const productPrice = Math.round(product.originalPrice * (1 - bundle.totalDiscountPercentage / 100));
-                const productSaving = product.originalPrice - productPrice;
+              
                 
                 return (
                   <div key={product.id} className="bg-gradient-to-br from-green-50 to-teal-50 rounded-lg p-3 border border-green-100 hover:border-green-300 transition-all">

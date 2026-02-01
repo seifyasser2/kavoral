@@ -4,8 +4,7 @@ import {
   ArrowLeft, CheckCircle 
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
-
+import { getWhatsAppLink } from '../data/config';
 const HomePage = () => {
   const { navigateTo } = useAppContext();
 

@@ -11,8 +11,7 @@ export const VALIDATION = {
   NAME: {
     MIN: 3,
     MAX: 100,
-    REGEX: /^[\u0600-\u06FF\s\-]*$/ // أحرف عربية فقط
-  },
+REGEX: /^[\u0600-\u06FF\s-]*$/  },
   
   PHONE: {
     REGEX: /^(\+?20|0)?1[0125]\d{8}$/,
@@ -239,7 +238,7 @@ export const REGEX = {
   PHONE: /^(\+?20|0)?1[0125]\d{8}$/,
   EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   ARABIC_ONLY: /^[\u0600-\u06FF\s\-]*$/,
-  NUMBER_ONLY: /^\d+$/,
+  ARABIC_ONLY: /^[\u0600-\u06FF\s-]*$/,
   SAFE_TEXT: /^[a-zA-Z0-9\u0600-\u06FF\s\-.,!']*$/
 };
 
@@ -271,7 +270,7 @@ export const Z_INDEX = {
   LOADER: 9999
 };
 
-export default {
+const constants = {
   VALIDATION,
   CART,
   PRICE,
@@ -289,3 +288,5 @@ export default {
   COLORS,
   Z_INDEX
 };
+
+export default constants;

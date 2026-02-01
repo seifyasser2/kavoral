@@ -6,7 +6,7 @@ import { useAppContext } from '../../context/AppContext';
 const BottomNav = () => {
   const { state, navigateTo } = useAppContext();
   
-  const cartCount = state.cart.length;
+ 
   const wishlistCount = state.wishlist.length;
 
   const navItems = [

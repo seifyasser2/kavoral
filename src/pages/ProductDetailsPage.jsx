@@ -25,7 +25,7 @@ const ProductDetailsPage = () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [product]);
+ }, [product, closeModal]);
 
   const closeModal = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });

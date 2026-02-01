@@ -1,15 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { 
-  ShoppingCart, Plus, Minus, Trash2, Send, User, 
-  Gift, Truck, MessageCircle, Package, Mail, Phone,
-  MapPin, Clock, Check, AlertCircle, X, ChevronDown, Sparkles
-} from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, Check, AlertCircle, ChevronDown } from 'lucide-react';
+
 import { useAppContext } from '../context/AppContext';
-import { SITE_CONFIG, getWhatsAppLink } from '../data/config';
+import { SITE_CONFIG } from '../data/config';
 import { Badge, LoadingSpinner, EmptyState, ConfirmModal } from '../components/common';
 
 const MIN_NAME_LENGTH = 3;
-const MAX_NAME_LENGTH = 100;
 const MIN_ADDRESS_LENGTH = 10;
 const MAX_ADDRESS_LENGTH = 500;
 const SUBMIT_RATE_LIMIT = 5000;

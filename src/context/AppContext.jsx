@@ -100,7 +100,7 @@ export const AppProvider = ({ children }) => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+}, [state.currentPage]);
 
   // Save data to localStorage
   useEffect(() => {

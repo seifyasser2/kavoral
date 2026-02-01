@@ -5,7 +5,7 @@ import Footer from "./components/common/Footer";
 import BottomNav from "./components/common/BottomNav";
 import { Notification, GlobalStyles } from "./components/common";
 import ErrorBoundary from "./components/common/ErrorBoundary";
-import { Z_INDEX } from "./constants";
+
 import { getWhatsAppLink } from "./data/config";
 import PWAInstallPrompt from './components/common/PWAInstallPrompt';
 
@@ -112,7 +112,7 @@ const AppContent = () => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [dispatch]);
+ }, [dispatch, state.currentPage]);
 
   useEffect(() => {
     const currentPage = state.currentPage;

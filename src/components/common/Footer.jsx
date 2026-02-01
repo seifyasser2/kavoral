@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MessageCircle, Users, Clock, MapPin, Heart, Sparkles, ChevronDown } from 'lucide-react';
+import { Phone, Mail, MessageCircle, Clock, Heart, Sparkles, ChevronDown } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { SITE_CONFIG, getWhatsAppLink, getDeveloperWhatsAppLink } from '../../data/config';
 
 const Footer = () => {
   const { navigateTo } = useAppContext();
-  const [expandedSection, setExpandedSection] = useState(null);
 
   const quickLinks = [
     { key: 'home', label: 'الرئيسية' },
