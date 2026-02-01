@@ -69,7 +69,7 @@ const PAYMENT_METHODS = {
 
 const sanitizeText = (text) => {
   if (typeof text !== 'string') return '';
-  return text.replace(/[<>\"'`]/g, '').replace(/\n{2,}/g, '\n').trim().substring(0, 1000);
+  return text.replace(/[<>"'`]/g, '').replace(/\n{2,}/g, '\n').trim().substring(0, 1000);
 };
 
 const validatePhone = (phone) => {

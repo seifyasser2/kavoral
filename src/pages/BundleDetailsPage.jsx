@@ -9,7 +9,10 @@ const BundleDetailsPage = () => {
   const bundle = state.selectedBundle;
   const [localQuantity, setLocalQuantity] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
-
+  const closeModal = useCallback(() => {
+    dispatch({ type: 'SET_SELECTED_BUNDLE', payload: null });
+    navigateTo('offers');
+  }, [dispatch, navigateTo]);
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') closeModal();
@@ -28,10 +31,7 @@ const BundleDetailsPage = () => {
     };
   }, [bundle, closeModal]);
 
-  const closeModal = useCallback(() => {
-    dispatch({ type: 'SET_SELECTED_BUNDLE', payload: null });
-    navigateTo('offers');
-  }, [dispatch, navigateTo]);
+
 
   const handleAddToCart = useCallback(() => {
     if (localQuantity <= 0) {

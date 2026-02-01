@@ -11,6 +11,11 @@ const ProductDetailsPage = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('benefits');
 
+  const closeModal = useCallback(() => {
+    dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });
+    navigateTo('products');
+  }, [dispatch, navigateTo]);
+  
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') closeModal();
@@ -27,10 +32,6 @@ const ProductDetailsPage = () => {
     };
  }, [product, closeModal]);
 
-  const closeModal = useCallback(() => {
-    dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });
-    navigateTo('products');
-  }, [dispatch, navigateTo]);
 
   const handleAddToCart = useCallback(() => {
     if (localQuantity <= 0) {

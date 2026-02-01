@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Phone, Mail, MessageCircle, Clock, Heart, Sparkles, ChevronDown } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { SITE_CONFIG, getWhatsAppLink, getDeveloperWhatsAppLink } from '../../data/config';
@@ -53,6 +53,7 @@ const Footer = () => {
     }
   ];
 
+  // ... باقي الكود يبقى كما هو - لا تغيير
   return (
     <footer className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white overflow-hidden mt-12 md:mt-16">
       {/* Decorative Background */}
@@ -301,15 +302,6 @@ const Footer = () => {
                 {SITE_CONFIG.developer.name}
               </a>
             </div>
-            {/* Dashboard Link - مخفي للأدمن فقط */}
-{/* <div className="">
-  <button
-    onClick={() => navigateTo('dashboard')}
-    className="text-xs text-gray-400 hover:text-green-500"
-  >
-    Admin
-  </button>
-</div> */}
           </div>
         </div>
       </div>
