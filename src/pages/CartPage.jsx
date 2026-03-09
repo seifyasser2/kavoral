@@ -5,7 +5,7 @@ import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG } from '../data/config';
 import { Badge, LoadingSpinner, EmptyState, ConfirmModal } from '../components/common';
 
-const MIN_NAME_LENGTH = 3;
+const MIN_NAME_LENGTH = 5;
 const MIN_ADDRESS_LENGTH = 10;
 const MAX_ADDRESS_LENGTH = 500;
 const SUBMIT_RATE_LIMIT = 5000;
@@ -116,8 +116,7 @@ const CartPage = () => {
   const [governorateOpen, setGovernorateOpen] = useState(false);
   const [shippingPrice, setShippingPrice] = useState(60);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     phone: '',
     phoneAlt: '',
     governorate: '',
@@ -176,14 +175,9 @@ const CartPage = () => {
   const validateForm = useCallback(() => {
     const newErrors = {};
 
-    const firstName = formData.firstName?.trim();
-    if (!firstName || firstName.length < MIN_NAME_LENGTH) {
-      newErrors.firstName = `الاسم الأول يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
-    }
-
-    const lastName = formData.lastName?.trim();
-    if (!lastName || lastName.length < MIN_NAME_LENGTH) {
-      newErrors.lastName = `الاسم الأخير يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
+    const fullName = formData.fullName?.trim();
+    if (!fullName || fullName.length < MIN_NAME_LENGTH) {
+      newErrors.fullName = `الاسم يجب أن يكون ${MIN_NAME_LENGTH} أحرف على الأقل`;
     }
 
     const phone = formData.phone?.trim();
@@ -247,64 +241,58 @@ const CartPage = () => {
     setIsSubmitting(true);
 
     try {
-      const firstName = sanitizeText(formData.firstName);
-      const lastName = sanitizeText(formData.lastName);
+      const fullName = sanitizeText(formData.fullName);
       const phone = formData.phone.trim();
       const phoneAlt = formData.phoneAlt?.trim() || '-';
       const governorateName = EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name || formData.governorate;
       const address = sanitizeText(formData.address);
       const notes = sanitizeText(formData.notes);
-      const fullName = `${firstName} ${lastName}`;
       
       const paymentMethodData = PAYMENT_METHODS[formData.paymentMethod];
 
-      // رسالة بسيطة ومنظمة
-      let message = `طلب جديد - ${SITE_CONFIG.name}\n\n`;
+      // رسالة مبسطة ومنظمة
+      let message = `📦 *طلب جديد - ${SITE_CONFIG.name}*\n\n`;
       
-      message += `بيانات العميل\n`;
+      message += `👤 *البيانات*\n`;
       message += `الاسم: ${fullName}\n`;
-      message += `رقم الهاتف: ${phone}\n`;
-      message += `رقم هاتف آخر: ${phoneAlt}\n`;
+      message += `الهاتف: ${phone}\n`;
+      message += `هاتف آخر: ${phoneAlt}\n`;
       message += `المحافظة: ${governorateName}\n`;
       message += `العنوان: ${address}\n\n`;
       
-      message += `الطلب\n`;
+      message += `🛍️ *المنتجات*\n`;
       state.cart.forEach((item) => {
-        message += `${item.name} - ${item.size} - الكمية: ${item.quantity}\n`;
+        message += `• ${item.name} - ${item.quantity}x (${item.price * item.quantity} ج)\n`;
       });
       
-      message += `\nالتحصيل\n`;
-      message += `إجمالي المنتجات: ${cartTotal} جنيه\n`;
-      message += `الشحن: ${shippingPrice} جنيه\n`;
+      message += `\n💰 *الإجمالي*\n`;
+      message += `المنتجات: ${cartTotal} ج\n`;
+      message += `الشحن: ${shippingPrice} ج\n`;
       if (deposit > 0) {
-        message += `الديبوزت المدفوع: ${deposit} جنيه\n`;
-        message += `المتبقي عند الاستلام: ${remainingAfterDeposit} جنيه\n`;
+        message += `الديبوزت: -${deposit} ج\n`;
       }
-      message += `الإجمالي النهائي: ${cartTotal + shippingPrice} جنيه\n\n`;
-      
-      message += `التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
-      message += `الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}\n\n`;
+      message += `*الإجمالي: ${cartTotal + shippingPrice} ج*\n\n`;
 
-      // تحديد طريقة الدفع
+      // طريقة الدفع
       if (formData.paymentMethod === 'vodafone') {
-        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
-        message += `رقم التحويل: ${paymentMethodData.number}\n`;
-        message += `** يرجى إرسال صورة الإيصال فوراً **\n`;
+        message += `💳 *فودافون كاش*\n`;
+        message += `الرقم: ${paymentMethodData.number}\n`;
+        message += `⚠️ ارسل صورة الإيصال بعد التحويل\n`;
       } else if (formData.paymentMethod === 'instapay') {
-        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
+        message += `💳 *إنستا باي*\n`;
         message += `المعرف: ${paymentMethodData.username}\n`;
-        message += `الرابط: ${paymentMethodData.link}\n`;
-        message += `** يرجى إرسال صورة الإيصال فوراً **\n`;
+        message += `⚠️ ارسل صورة الإيصال بعد التحويل\n`;
       } else if (formData.paymentMethod === 'cash') {
-        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
+        message += `💵 *الدفع عند الاستلام*\n`;
         if (deposit > 0) {
-          message += `الديبوزت المدفوع: ${deposit} جنيه\n`;
-          message += `المتبقي عند الاستلام: ${remainingAfterDeposit} جنيه\n`;
+          message += `الديبوزت المدفوع: ${deposit} ج\n`;
+          message += `المتبقي عند الاستلام: ${remainingAfterDeposit} ج\n`;
+          message += `⚠️ الرجاء إرسال اسكرين شوت تأكيد الديبوزت\n`;
         }
       }
 
       if (notes) {
-        message += `\nملاحظات: ${notes}\n`;
+        message += `\n📝 ملاحظات: ${notes}\n`;
       }
 
       const encodedMessage = encodeURIComponent(message);
@@ -316,6 +304,17 @@ const CartPage = () => {
           type: 'ADD_NOTIFICATION',
           payload: { 
             message: 'تذكر: أرسل صورة الإيصال على واتساب بعد التحويل!', 
+            type: 'warning' 
+          }
+        });
+      }
+
+      // تحذير للديبوزت
+      if (formData.paymentMethod === 'cash' && deposit > 0) {
+        dispatch({
+          type: 'ADD_NOTIFICATION',
+          payload: { 
+            message: 'لا تنسى إرسال اسكرين شوت الديبوزت!', 
             type: 'warning' 
           }
         });
@@ -369,8 +368,7 @@ const CartPage = () => {
       
       setIsCheckout(false);
       setFormData({ 
-        firstName: '', 
-        lastName: '', 
+        fullName: '', 
         phone: '', 
         phoneAlt: '',
         governorate: '', 
@@ -461,7 +459,7 @@ const CartPage = () => {
                         <h3 className="text-sm md:text-base font-bold text-gray-800 truncate">
                           {item.name}
                         </h3>
-                        <p className="text-xs text-gray-500">{item.size}</p>
+                        <p className="text-xs text-green-600 font-bold">{item.price} ج</p>
                       </div>
                       <button
                         onClick={() => setItemToDelete(item)}
@@ -548,29 +546,16 @@ const CartPage = () => {
             ) : (
               <form onSubmit={(e) => { e.preventDefault(); handleCheckout(); }} className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">الاسم الأول *</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">الاسم ثلاثي *</label>
                   <input
                     type="text"
-                    placeholder="أحمد"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    maxLength={50}
-                    className={`w-full p-2 border-2 rounded-lg text-sm ${errors.firstName ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                    placeholder="الرجاء ادخال الاسم ثلاثي"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                    maxLength={100}
+                    className={`w-full p-2 border-2 rounded-lg text-sm ${errors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
                   />
-                  {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">الاسم الأخير *</label>
-                  <input
-                    type="text"
-                    placeholder="محمد"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    maxLength={50}
-                    className={`w-full p-2 border-2 rounded-lg text-sm ${errors.lastName ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
-                  />
-                  {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
+                  {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
                 </div>
 
                 <div>
@@ -857,4 +842,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage;
+export default CartPage;gi
