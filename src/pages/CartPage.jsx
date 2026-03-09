@@ -11,6 +11,7 @@ const MAX_ADDRESS_LENGTH = 500;
 const SUBMIT_RATE_LIMIT = 5000;
 const MAX_QUANTITY_PER_ITEM = 100;
 const MIN_QUANTITY = 1;
+const MIN_DEPOSIT = 50;
 
 // جدول أسعار الشحن حسب المحافظة
 const SHIPPING_PRICES = {
@@ -78,9 +79,10 @@ const PAYMENT_METHODS = {
     id: 'instapay',
     name: 'إنستا باي',
     icon: '💳',
-    link: 'https://ipn.eg/S/seifbank2/instapay/3pDl2F',
-    username: 'seifbank2@instapay',
-    color: 'blue'
+    link: 'https://ipn.eg/S/seifbank/instapay/2llVSu',
+    username: 'seifbank',
+    color: 'blue',
+    buttonText: 'اضغط لإرسال النقود'
   },
   cash: {
     id: 'cash',
@@ -121,14 +123,22 @@ const CartPage = () => {
     governorate: '',
     address: '',
     notes: '',
-    paymentMethod: ''
+    paymentMethod: '',
+    depositAmount: ''
   });
 
   const cartTotal = useMemo(() => {
     return state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   }, [state.cart]);
 
-  const finalTotal = cartTotal + shippingPrice;
+  // حساب الديبوزت (فقط للدفع عند الاستلام)
+  const deposit = formData.paymentMethod === 'cash' 
+    ? Math.max(parseInt(formData.depositAmount) || 0, 0)
+    : 0;
+
+  // الإجمالي = المنتجات + الشحن - الديبوزت (الديبوزت يتخصم)
+  const finalTotal = Math.max(cartTotal + shippingPrice - deposit, 0);
+  const remainingAfterDeposit = Math.max(finalTotal, 0);
 
   const updateCartQuantity = useCallback((id, quantity) => {
     const validatedQuantity = validateQuantity(quantity);
@@ -196,6 +206,17 @@ const CartPage = () => {
       newErrors.paymentMethod = 'يرجى اختيار طريقة الدفع';
     }
 
+    // التحقق من الديبوزت
+    if (formData.paymentMethod === 'cash') {
+      const depositAmount = parseInt(formData.depositAmount) || 0;
+      if (!formData.depositAmount || depositAmount < MIN_DEPOSIT) {
+        newErrors.depositAmount = `الحد الأدنى للديبوزت ${MIN_DEPOSIT} جنيه`;
+      }
+      if (depositAmount > (cartTotal + shippingPrice)) {
+        newErrors.depositAmount = 'الديبوزت لا يمكن أن يزيد عن الإجمالي';
+      }
+    }
+
     const address = formData.address?.trim();
     if (!address || address.length < MIN_ADDRESS_LENGTH) {
       newErrors.address = `العنوان يجب أن يكون ${MIN_ADDRESS_LENGTH} أحرف على الأقل`;
@@ -203,7 +224,7 @@ const CartPage = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData]);
+  }, [formData, cartTotal, shippingPrice]);
 
   const handleCheckout = useCallback(async () => {
     const now = Date.now();
@@ -255,7 +276,11 @@ const CartPage = () => {
       message += `\nالتحصيل\n`;
       message += `إجمالي المنتجات: ${cartTotal} جنيه\n`;
       message += `الشحن: ${shippingPrice} جنيه\n`;
-      message += `الإجمالي: ${finalTotal} جنيه\n\n`;
+      if (deposit > 0) {
+        message += `الديبوزت المدفوع: ${deposit} جنيه\n`;
+        message += `المتبقي عند الاستلام: ${remainingAfterDeposit} جنيه\n`;
+      }
+      message += `الإجمالي النهائي: ${cartTotal + shippingPrice} جنيه\n\n`;
       
       message += `التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
       message += `الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}\n\n`;
@@ -268,9 +293,14 @@ const CartPage = () => {
       } else if (formData.paymentMethod === 'instapay') {
         message += `طريقة الدفع: ${paymentMethodData.name}\n`;
         message += `المعرف: ${paymentMethodData.username}\n`;
+        message += `الرابط: ${paymentMethodData.link}\n`;
         message += `** يرجى إرسال صورة الإيصال فوراً **\n`;
-      } else {
+      } else if (formData.paymentMethod === 'cash') {
         message += `طريقة الدفع: ${paymentMethodData.name}\n`;
+        if (deposit > 0) {
+          message += `الديبوزت المدفوع: ${deposit} جنيه\n`;
+          message += `المتبقي عند الاستلام: ${remainingAfterDeposit} جنيه\n`;
+        }
       }
 
       if (notes) {
@@ -321,6 +351,7 @@ const CartPage = () => {
           total: finalTotal,
           cartSubtotal: cartTotal,
           shippingPrice: shippingPrice,
+          deposit: deposit,
           customerName: fullName,
           customerPhone: phone,
           paymentMethod: paymentMethodData.name,
@@ -345,7 +376,8 @@ const CartPage = () => {
         governorate: '', 
         address: '', 
         notes: '', 
-        paymentMethod: '' 
+        paymentMethod: '',
+        depositAmount: ''
       });
       setLastSubmit(Date.now());
       
@@ -362,7 +394,7 @@ const CartPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, finalTotal, shippingPrice, navigateTo]);
+  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, finalTotal, shippingPrice, deposit, remainingAfterDeposit, navigateTo]);
 
   if (state.cart.length === 0) {
     return (
@@ -491,7 +523,7 @@ const CartPage = () => {
                   </div>
                   <div className="flex justify-between pt-3 border-t-2 border-gray-300">
                     <span className="text-gray-800 font-bold">الإجمالي:</span>
-                    <span className="font-bold text-xl text-green-600">{finalTotal} ج</span>
+                    <span className="font-bold text-xl text-green-600">{cartTotal + shippingPrice} ج</span>
                   </div>
                 </div>
 
@@ -554,10 +586,10 @@ const CartPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">رقم هاتف آخر</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">رقم هاتف آخر (مهم) *</label>
                   <input
                     type="tel"
-                    placeholder="01012345678 (اختياري)"
+                    placeholder="01012345678"
                     value={formData.phoneAlt}
                     onChange={(e) => setFormData({...formData, phoneAlt: e.target.value})}
                     className={`w-full p-2 border-2 rounded-lg text-sm ${errors.phoneAlt ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
@@ -665,6 +697,15 @@ const CartPage = () => {
                         <span className="font-bold text-sm">{PAYMENT_METHODS.instapay.icon} {PAYMENT_METHODS.instapay.name}</span>
                       </div>
                       <p className="text-xs text-gray-600 mr-6">المعرف: {PAYMENT_METHODS.instapay.username}</p>
+                      <p className="text-xs text-blue-600 font-bold mt-2 mr-6">🔗 {PAYMENT_METHODS.instapay.buttonText}</p>
+                      <a
+                        href={PAYMENT_METHODS.instapay.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold mt-1 mr-6 inline-block hover:underline"
+                      >
+                        اضغط هنا لفتح الرابط →
+                      </a>
                     </div>
 
                     {/* الدفع عند الاستلام */}
@@ -690,6 +731,75 @@ const CartPage = () => {
                   </div>
                   {errors.paymentMethod && <p className="text-red-500 text-xs mt-1">{errors.paymentMethod}</p>}
                 </div>
+
+                {/* حقل الديبوزت - يظهر فقط عند اختيار الدفع عند الاستلام */}
+                {formData.paymentMethod === 'cash' && (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3 space-y-2">
+                    <label className="block text-xs font-bold text-gray-700">
+                      💰 قيمة الديبوزت (الحد الأدنى {MIN_DEPOSIT} ج) *
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="أدخل المبلغ"
+                      value={formData.depositAmount}
+                      onChange={(e) => setFormData({...formData, depositAmount: e.target.value})}
+                      min={MIN_DEPOSIT}
+                      className={`w-full p-2 border-2 rounded-lg text-sm ${
+                        formData.depositAmount && parseInt(formData.depositAmount) < MIN_DEPOSIT
+                          ? 'border-yellow-400 bg-yellow-50'
+                          : 'border-green-300 bg-white'
+                      }`}
+                    />
+                    {formData.depositAmount && parseInt(formData.depositAmount) < MIN_DEPOSIT && (
+                      <p className="text-yellow-700 text-xs font-bold">⚠️ الحد الأدنى للديبوزت {MIN_DEPOSIT} جنيه</p>
+                    )}
+                    {errors.depositAmount && <p className="text-red-500 text-xs">{errors.depositAmount}</p>}
+                    
+                    {/* ملخص الديبوزت والإجمالي */}
+                    {formData.depositAmount && (
+                      <div className="bg-white border-2 border-green-300 rounded-lg p-2 space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">المنتجات:</span>
+                          <span className="font-bold text-gray-800">{cartTotal} ج</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">الشحن:</span>
+                          <span className="font-bold text-gray-800">{shippingPrice} ج</span>
+                        </div>
+                        <div className="flex justify-between text-xs border-t pt-1">
+                          <span className="text-green-700 font-bold">الإجمالي قبل الديبوزت:</span>
+                          <span className="font-bold text-green-700">{cartTotal + shippingPrice} ج</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-orange-700 font-bold">الديبوزت المدفوع:</span>
+                          <span className="font-bold text-orange-700">-{deposit} ج</span>
+                        </div>
+                        <div className="flex justify-between text-sm border-t-2 border-green-400 pt-1">
+                          <span className="text-green-800 font-bold">المتبقي عند الاستلام:</span>
+                          <span className="font-bold text-green-600">{remainingAfterDeposit} ج</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ملخص بسيط للطرق الأخرى */}
+                {formData.paymentMethod && formData.paymentMethod !== 'cash' && (
+                  <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-3 space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">المنتجات:</span>
+                      <span className="font-bold text-gray-800">{cartTotal} ج</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">الشحن:</span>
+                      <span className="font-bold text-gray-800">{shippingPrice} ج</span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t-2 border-gray-400 pt-1">
+                      <span className="text-gray-800 font-bold">الإجمالي:</span>
+                      <span className="font-bold text-green-600">{cartTotal + shippingPrice} ج</span>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-2 pt-3">
                   <button
