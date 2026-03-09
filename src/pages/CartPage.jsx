@@ -11,36 +11,59 @@ const MAX_ADDRESS_LENGTH = 500;
 const SUBMIT_RATE_LIMIT = 5000;
 const MAX_QUANTITY_PER_ITEM = 100;
 const MIN_QUANTITY = 1;
-const FREE_SHIPPING_THRESHOLD = 1000;
+
+// جدول أسعار الشحن حسب المحافظة
+const SHIPPING_PRICES = {
+  // 60 جنيه
+  60: ['cairo', 'giza', 'qalioubia'],
+  // 65 جنيه
+  65: ['sharqia', 'kafr_elsheikh', 'suez', 'port_said', 'beheira', 'damietta', 'dakahlia', 'gharbia', 'monufia', 'alexandria'],
+  // 75 جنيه
+  75: ['assiut', 'minya', 'fayoum', 'beni_suef', 'ismailia'],
+  // 105 جنيه
+  105: ['sohag', 'qena', 'luxor', 'aswan', 'new_valley'],
+  // 115 جنيه
+  115: ['north_sinai', 'south_sinai', 'matrouh', 'red_sea']
+};
+
+// دالة للحصول على سعر الشحن حسب المحافظة
+const getShippingPrice = (governorateId) => {
+  for (const [price, governorates] of Object.entries(SHIPPING_PRICES)) {
+    if (governorates.includes(governorateId)) {
+      return parseInt(price);
+    }
+  }
+  return 60; // السعر الافتراضي
+};
 
 const EGYPTIAN_GOVERNORATES = [
-  { id: 'cairo', name: 'القاهرة', emoji: '🏙️' },
-  { id: 'giza', name: 'الجيزة', emoji: '🗿' },
-  { id: 'alexandria', name: 'الإسكندرية', emoji: '🌊' },
-  { id: 'qalioubia', name: 'القليوبية', emoji: '🏡' },
-  { id: 'sharqia', name: 'الشرقية', emoji: '🏜️' },
-  { id: 'monufia', name: 'المنوفية', emoji: '🌾' },
-  { id: 'dakahlia', name: 'الدقهلية', emoji: '🌳' },
-  { id: 'damietta', name: 'دمياط', emoji: '🐟' },
-  { id: 'beheira', name: 'البحيرة', emoji: '💧' },
-  { id: 'kafr_elsheikh', name: 'كفر الشيخ', emoji: '🌾' },
-  { id: 'fayoum', name: 'الفيوم', emoji: '💎' },
-  { id: 'beni_suef', name: 'بني سويف', emoji: '⛰️' },
-  { id: 'minya', name: 'المنيا', emoji: '🏛️' },
-  { id: 'assiut', name: 'أسيوط', emoji: '🗻' },
-  { id: 'sohag', name: 'سوهاج', emoji: '🏺' },
-  { id: 'qena', name: 'قنا', emoji: '⚱️' },
-  { id: 'luxor', name: 'الأقصر', emoji: '🏛️' },
-  { id: 'aswan', name: 'أسوان', emoji: '☀️' },
-  { id: 'red_sea', name: 'البحر الأحمر', emoji: '🏖️' },
-  { id: 'new_valley', name: 'الوادي الجديد', emoji: '🏜️' },
-  { id: 'north_sinai', name: 'شمال سيناء', emoji: '⛰️' },
-  { id: 'south_sinai', name: 'جنوب سيناء', emoji: '🏝️' },
-  { id: 'port_said', name: 'بورسعيد', emoji: '⚓' },
-  { id: 'ismailia', name: 'الإسماعيلية', emoji: '🌉' },
-  { id: 'suez', name: 'السويس', emoji: '🚢' },
-  { id: 'matrouh', name: 'مطروح', emoji: '🏜️' },
-  { id: 'gharbia', name: 'الغربية', emoji: '🧵' }
+  { id: 'cairo', name: 'القاهرة' },
+  { id: 'giza', name: 'الجيزة' },
+  { id: 'alexandria', name: 'الإسكندرية' },
+  { id: 'qalioubia', name: 'القليوبية' },
+  { id: 'sharqia', name: 'الشرقية' },
+  { id: 'monufia', name: 'المنوفية' },
+  { id: 'dakahlia', name: 'الدقهلية' },
+  { id: 'damietta', name: 'دمياط' },
+  { id: 'beheira', name: 'البحيرة' },
+  { id: 'kafr_elsheikh', name: 'كفر الشيخ' },
+  { id: 'fayoum', name: 'الفيوم' },
+  { id: 'beni_suef', name: 'بني سويف' },
+  { id: 'minya', name: 'المنيا' },
+  { id: 'assiut', name: 'أسيوط' },
+  { id: 'sohag', name: 'سوهاج' },
+  { id: 'qena', name: 'قنا' },
+  { id: 'luxor', name: 'الأقصر' },
+  { id: 'aswan', name: 'أسوان' },
+  { id: 'red_sea', name: 'البحر الأحمر' },
+  { id: 'new_valley', name: 'الوادي الجديد' },
+  { id: 'north_sinai', name: 'شمال سيناء' },
+  { id: 'south_sinai', name: 'جنوب سيناء' },
+  { id: 'port_said', name: 'بورسعيد' },
+  { id: 'ismailia', name: 'الإسماعيلية' },
+  { id: 'suez', name: 'السويس' },
+  { id: 'matrouh', name: 'مطروح' },
+  { id: 'gharbia', name: 'الغربية' }
 ];
 
 const PAYMENT_METHODS = {
@@ -89,10 +112,12 @@ const CartPage = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [lastSubmit, setLastSubmit] = useState(0);
   const [governorateOpen, setGovernorateOpen] = useState(false);
+  const [shippingPrice, setShippingPrice] = useState(60);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     phone: '',
+    phoneAlt: '',
     governorate: '',
     address: '',
     notes: '',
@@ -102,6 +127,8 @@ const CartPage = () => {
   const cartTotal = useMemo(() => {
     return state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   }, [state.cart]);
+
+  const finalTotal = cartTotal + shippingPrice;
 
   const updateCartQuantity = useCallback((id, quantity) => {
     const validatedQuantity = validateQuantity(quantity);
@@ -127,6 +154,15 @@ const CartPage = () => {
     }
   }, [itemToDelete, dispatch]);
 
+  const handleGovernorateChange = (governorateId) => {
+    setFormData({...formData, governorate: governorateId});
+    setGovernorateOpen(false);
+    
+    // حساب سعر الشحن الجديد
+    const newPrice = getShippingPrice(governorateId);
+    setShippingPrice(newPrice);
+  };
+
   const validateForm = useCallback(() => {
     const newErrors = {};
 
@@ -145,6 +181,11 @@ const CartPage = () => {
       newErrors.phone = 'رقم الهاتف مطلوب';
     } else if (!validatePhone(phone)) {
       newErrors.phone = 'رقم الهاتف غير صحيح (مثال: 01012345678)';
+    }
+
+    // التحقق من رقم الهاتف الثاني (اختياري لكن يجب أن يكون صحيح إن وجد)
+    if (formData.phoneAlt?.trim() && !validatePhone(formData.phoneAlt)) {
+      newErrors.phoneAlt = 'رقم الهاتف الثاني غير صحيح';
     }
 
     if (!formData.governorate) {
@@ -188,71 +229,63 @@ const CartPage = () => {
       const firstName = sanitizeText(formData.firstName);
       const lastName = sanitizeText(formData.lastName);
       const phone = formData.phone.trim();
+      const phoneAlt = formData.phoneAlt?.trim() || '-';
       const governorateName = EGYPTIAN_GOVERNORATES.find(g => g.id === formData.governorate)?.name || formData.governorate;
       const address = sanitizeText(formData.address);
       const notes = sanitizeText(formData.notes);
       const fullName = `${firstName} ${lastName}`;
       
       const paymentMethodData = PAYMENT_METHODS[formData.paymentMethod];
-      const paymentMethodText = `${paymentMethodData.icon} ${paymentMethodData.name}`;
 
-      const orderNumber = `ORD-${Date.now()}`;
-
-      // ✅ رسالة واتساب - التركيز الوحيد
-      let message = `🛒 *طلب جديد من ${SITE_CONFIG.name}*\n\n`;
-      message += `📝 *بيانات العميل:*\n`;
-      message += `الاسم: *${fullName}*\n`;
-      message += `التليفون: *${phone}*\n`;
-      message += `المحافظة: *${governorateName}*\n`;
-      message += `العنوان: *${address}*\n`;
-      message += `طريقة الدفع: *${paymentMethodText}*\n`;
+      // رسالة بسيطة ومنظمة
+      let message = `طلب جديد - ${SITE_CONFIG.name}\n\n`;
       
-      if (formData.paymentMethod === 'vodafone') {
-        message += `📱 *الرقم للتحويل:* ${PAYMENT_METHODS.vodafone.number}\n`;
-      } else if (formData.paymentMethod === 'instapay') {
-        message += `💳 *المعرف للتحويل:* ${PAYMENT_METHODS.instapay.username}\n`;
-      }
+      message += `بيانات العميل\n`;
+      message += `الاسم: ${fullName}\n`;
+      message += `رقم الهاتف: ${phone}\n`;
+      message += `رقم هاتف آخر: ${phoneAlt}\n`;
+      message += `المحافظة: ${governorateName}\n`;
+      message += `العنوان: ${address}\n\n`;
       
-      if (notes) {
-        message += `📌 الملاحظات: ${notes}\n`;
-      }
-      
-      message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `🛍️ *تفاصيل الطلب:*\n\n`;
-      
-      state.cart.forEach((item, index) => {
-        message += `${index + 1}. *${item.name}*\n`;
-        message += `   📏 الحجم: ${item.size}\n`;
-        message += `   🔢 الكمية: ${item.quantity}\n`;
-        message += `   💵 السعر: ${item.price} جنيه\n`;
-        message += `   💰 المجموع: *${item.price * item.quantity} جنيه*\n\n`;
+      message += `الطلب\n`;
+      state.cart.forEach((item) => {
+        message += `${item.name} - ${item.size} - الكمية: ${item.quantity}\n`;
       });
+      
+      message += `\nالتحصيل\n`;
+      message += `إجمالي المنتجات: ${cartTotal} جنيه\n`;
+      message += `الشحن: ${shippingPrice} جنيه\n`;
+      message += `الإجمالي: ${finalTotal} جنيه\n\n`;
+      
+      message += `التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
+      message += `الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}\n\n`;
 
-      message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-      message += `\n💰 *الإجمالي الكلي: ${cartTotal} جنيه*\n\n`;
-      
-      // ⚠️ تنبيه مهم للدفع الإلكتروني
-      if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
-        message += `⚠️ *مهم جداً:*\n`;
-        message += `📸 يرجى إرسال *صورة إيصال الدفع* بعد هذه الرسالة مباشرة\n`;
-        message += `✅ لن يتم تأكيد الطلب إلا بعد استلام الإيصال\n\n`;
+      // تحديد طريقة الدفع
+      if (formData.paymentMethod === 'vodafone') {
+        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
+        message += `رقم التحويل: ${paymentMethodData.number}\n`;
+        message += `** يرجى إرسال صورة الإيصال فوراً **\n`;
+      } else if (formData.paymentMethod === 'instapay') {
+        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
+        message += `المعرف: ${paymentMethodData.username}\n`;
+        message += `** يرجى إرسال صورة الإيصال فوراً **\n`;
+      } else {
+        message += `طريقة الدفع: ${paymentMethodData.name}\n`;
       }
-      
-      message += `📦 *رقم الطلب:* ${orderNumber}\n`;
-      message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
-      message += `🕐 الوقت: ${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}\n\n`;
-      message += `🌿 شكراً لاختيارك ${SITE_CONFIG.name}\n`;
-      message += `📞 سيتم التواصل معك قريباً لتأكيد الطلب`;
+
+      if (notes) {
+        message += `\nملاحظات: ${notes}\n`;
+      }
 
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
       
-      // ⚠️ تنبيه قوي للعميل قبل الإرسال
+      // تحذير للدفع الإلكتروني
       if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
         dispatch({
           type: 'ADD_NOTIFICATION',
           payload: { 
-            message: '⚠️ مهم: بعد الإرسال، يجب إرسال صورة إيصال الدفع على واتساب فوراً!', 
+            message: 'تذكر: أرسل صورة الإيصال على واتساب بعد التحويل!', 
             type: 'warning' 
           }
         });
@@ -277,18 +310,20 @@ const CartPage = () => {
 
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // ✅ حفظ بيانات الطلب محلياً فقط (localStorage)
+      // حفظ بيانات الطلب
       dispatch({
         type: 'SET_LAST_ORDER',
         payload: {
-          orderNumber: orderNumber,
+          orderNumber: `ORD-${Date.now()}`,
           date: new Date().toLocaleDateString('ar-EG'),
           time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
           items: [...state.cart],
-          total: cartTotal,
+          total: finalTotal,
+          cartSubtotal: cartTotal,
+          shippingPrice: shippingPrice,
           customerName: fullName,
           customerPhone: phone,
-          paymentMethod: paymentMethodText,
+          paymentMethod: paymentMethodData.name,
           needsPaymentProof: formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay'
         }
       });
@@ -298,7 +333,7 @@ const CartPage = () => {
       
       dispatch({
         type: 'ADD_NOTIFICATION',
-        payload: { message: '✅ تم إرسال الطلب عبر واتساب بنجاح!', type: 'success' }
+        payload: { message: 'تم إرسال الطلب عبر واتساب بنجاح!', type: 'success' }
       });
       
       setIsCheckout(false);
@@ -306,6 +341,7 @@ const CartPage = () => {
         firstName: '', 
         lastName: '', 
         phone: '', 
+        phoneAlt: '',
         governorate: '', 
         address: '', 
         notes: '', 
@@ -326,7 +362,7 @@ const CartPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, navigateTo]);
+  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, finalTotal, shippingPrice, navigateTo]);
 
   if (state.cart.length === 0) {
     return (
@@ -363,22 +399,6 @@ const CartPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
           <div className="lg:col-span-2 space-y-4">
-            {cartTotal < FREE_SHIPPING_THRESHOLD && (
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 rounded-xl shadow-lg flex items-center gap-3">
-                <Truck size={20} />
-                <div className="flex-1">
-                  <p className="font-bold text-sm">أضف {FREE_SHIPPING_THRESHOLD - cartTotal} ج للشحن المجاني!</p>
-                </div>
-              </div>
-            )}
-
-            {cartTotal >= FREE_SHIPPING_THRESHOLD && (
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-xl shadow-lg flex items-center gap-3">
-                <Check size={20} />
-                <p className="font-bold text-sm">🎉 شحن مجاني</p>
-              </div>
-            )}
-
             {state.cart.map((item) => (
               <div 
                 key={item.id} 
@@ -462,8 +482,16 @@ const CartPage = () => {
               <>
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm">الإجمالي:</span>
+                    <span className="text-gray-600 text-sm">المنتجات:</span>
                     <span className="font-bold text-lg text-gray-800">{cartTotal} ج</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t">
+                    <span className="text-gray-600 text-sm">الشحن:</span>
+                    <span className="font-bold text-lg text-orange-600">{shippingPrice} ج</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t-2 border-gray-300">
+                    <span className="text-gray-800 font-bold">الإجمالي:</span>
+                    <span className="font-bold text-xl text-green-600">{finalTotal} ج</span>
                   </div>
                 </div>
 
@@ -526,6 +554,18 @@ const CartPage = () => {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">رقم هاتف آخر</label>
+                  <input
+                    type="tel"
+                    placeholder="01012345678 (اختياري)"
+                    value={formData.phoneAlt}
+                    onChange={(e) => setFormData({...formData, phoneAlt: e.target.value})}
+                    className={`w-full p-2 border-2 rounded-lg text-sm ${errors.phoneAlt ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}
+                  />
+                  {errors.phoneAlt && <p className="text-red-500 text-xs mt-1">{errors.phoneAlt}</p>}
+                </div>
+
+                <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">المحافظة *</label>
                   <div className="relative">
                     <button
@@ -543,13 +583,10 @@ const CartPage = () => {
                           <button
                             key={gov.id}
                             type="button"
-                            onClick={() => {
-                              setFormData({...formData, governorate: gov.id});
-                              setGovernorateOpen(false);
-                            }}
+                            onClick={() => handleGovernorateChange(gov.id)}
                             className={`w-full p-2 text-right text-sm hover:bg-green-50 transition-all border-b last:border-b-0 ${formData.governorate === gov.id ? 'bg-green-100 font-bold' : ''}`}
                           >
-                            {gov.emoji} {gov.name}
+                            {gov.name}
                           </button>
                         ))}
                       </div>
@@ -606,14 +643,6 @@ const CartPage = () => {
                         <span className="font-bold text-sm">{PAYMENT_METHODS.vodafone.icon} {PAYMENT_METHODS.vodafone.name}</span>
                       </div>
                       <p className="text-xs text-gray-600 mr-6">الرقم: {PAYMENT_METHODS.vodafone.number}</p>
-                      {formData.paymentMethod === 'vodafone' && (
-                        <div className="mt-2 mr-6 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                          <p className="text-xs text-yellow-800 font-bold flex items-center gap-1">
-                            <AlertCircle size={12} />
-                            ⚠️ يجب إرسال صورة الإيصال على واتساب بعد التحويل
-                          </p>
-                        </div>
-                      )}
                     </div>
 
                     {/* إنستا باي */}
@@ -636,23 +665,6 @@ const CartPage = () => {
                         <span className="font-bold text-sm">{PAYMENT_METHODS.instapay.icon} {PAYMENT_METHODS.instapay.name}</span>
                       </div>
                       <p className="text-xs text-gray-600 mr-6">المعرف: {PAYMENT_METHODS.instapay.username}</p>
-                      <a 
-                        href={PAYMENT_METHODS.instapay.link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs text-blue-600 underline mr-6 hover:text-blue-800 inline-block mt-1"
-                      >
-                        اضغط هنا للدفع
-                      </a>
-                      {formData.paymentMethod === 'instapay' && (
-                        <div className="mt-2 mr-6 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                          <p className="text-xs text-yellow-800 font-bold flex items-center gap-1">
-                            <AlertCircle size={12} />
-                            ⚠️ يجب إرسال صورة الإيصال على واتساب بعد الدفع
-                          </p>
-                        </div>
-                      )}
                     </div>
 
                     {/* الدفع عند الاستلام */}
@@ -678,36 +690,6 @@ const CartPage = () => {
                   </div>
                   {errors.paymentMethod && <p className="text-red-500 text-xs mt-1">{errors.paymentMethod}</p>}
                 </div>
-
-                {/* ⚠️ تحذير نهائي قبل الإرسال */}
-                {(formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') && (
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle size={24} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h3 className="font-bold text-yellow-900 text-sm mb-2">📸 تنبيه مهم جداً:</h3>
-                        <ul className="text-xs text-yellow-800 space-y-1">
-                          <li className="flex items-start gap-1">
-                            <span className="font-bold">1️⃣</span>
-                            <span>بعد الضغط على "إتمام الطلب" سيفتح واتساب</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="font-bold">2️⃣</span>
-                            <span>قم بالتحويل للرقم/المعرف المذكور أعلاه</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="font-bold">3️⃣</span>
-                            <span className="font-bold text-red-600">أرسل صورة إيصال الدفع فوراً على واتساب</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="font-bold">4️⃣</span>
-                            <span>الطلب لن يتم تأكيده إلا بعد استلام الإيصال</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex gap-2 pt-3">
                   <button
