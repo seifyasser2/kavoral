@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, Check, AlertCircle, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, ChevronDown } from 'lucide-react';
 
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG } from '../data/config';
