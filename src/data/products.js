@@ -16,7 +16,7 @@ const sanitizeText = (text) => {
 // ============================================
 // الخصم العام
 // ============================================
-export const GLOBAL_DISCOUNT = 40;
+export const GLOBAL_DISCOUNT = 0;
 
 // ============================================
 // بيانات المنتجات الخام - مع الأسعار المحدّثة
@@ -94,7 +94,7 @@ const productsRawData = [
     name: 'خلطة التنعيم ',
     slug: 'smoothing-oil',
     originalPrice: 220,
-    discountPercentage: 32,
+    discountPercentage: 0,
     size: BOTTLE_SIZES.medium,
     image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1761830251/IMG_20251030_161451_vntsdd.png',
     imageAlt: '✨',
@@ -125,7 +125,7 @@ const productsRawData = [
     name: 'خلطة السبع زيوت ',
     slug: 'seven-oils',
     originalPrice: 230,
-    discountPercentage: 30,
+    discountPercentage: 0,
     size: BOTTLE_SIZES.medium,
     image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1761828523/IMG_20251030_152134_f3zl98.jpg',
     imageAlt: '🌟',

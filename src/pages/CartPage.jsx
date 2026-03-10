@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, ChevronDown, Gift, X, AlertCircle } from 'lucide-react';
 
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG } from '../data/config';
@@ -15,16 +15,23 @@ const MIN_DEPOSIT = 50;
 
 // جدول أسعار الشحن حسب المحافظة
 const SHIPPING_PRICES = {
-  // 60 جنيه
   65: ['cairo', 'giza', 'qalioubia'],
-  // 65 جنيه
   70: ['sharqia', 'kafr_elsheikh', 'suez', 'port_said', 'beheira', 'damietta', 'dakahlia', 'gharbia', 'monufia', 'alexandria'],
-  // 75 جنيه
   80: ['assiut', 'minya', 'fayoum', 'beni_suef', 'ismailia'],
-  // 105 جنيه
   110: ['sohag', 'qena', 'luxor', 'aswan', 'new_valley'],
-  // 115 جنيه
   120: ['north_sinai', 'south_sinai', 'matrouh', 'red_sea']
+};
+
+// ✅ أكواس الخصم البسيطة
+const DISCOUNT_CODES = {
+  'SAVE155': 155,
+  'SAVE140': 140,
+  'WELCOME30': 30,
+  'SUMMER75': 75,
+  'FLASH60': 60,
+  'SPECIAL40': 40,
+  'GIFT20': 20,
+  'CODE15': 15,
 };
 
 // دالة للحصول على سعر الشحن حسب المحافظة
@@ -34,7 +41,24 @@ const getShippingPrice = (governorateId) => {
       return parseInt(price);
     }
   }
-  return 60; // السعر الافتراضي
+  return null;
+};
+
+// ✅ دالة التحقق من كود الخصم
+const validateDiscountCode = (code) => {
+  const upperCode = code.toUpperCase().trim();
+  if (DISCOUNT_CODES[upperCode]) {
+    return {
+      isValid: true,
+      amount: DISCOUNT_CODES[upperCode],
+      message: `✅ كود صحيح! خصم ${DISCOUNT_CODES[upperCode]} جنيه`
+    };
+  }
+  return {
+    isValid: false,
+    amount: 0,
+    message: '❌ كود غير صحيح'
+  };
 };
 
 const EGYPTIAN_GOVERNORATES = [
@@ -114,7 +138,11 @@ const CartPage = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [lastSubmit, setLastSubmit] = useState(0);
   const [governorateOpen, setGovernorateOpen] = useState(false);
-  const [shippingPrice, setShippingPrice] = useState(60);
+  const [shippingPrice, setShippingPrice] = useState(null);
+  const [discountCode, setDiscountCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountError, setDiscountError] = useState('');
+  const [discountSuccess, setDiscountSuccess] = useState('');
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -122,6 +150,7 @@ const CartPage = () => {
     governorate: '',
     address: '',
     notes: '',
+    discountCode: '', // ✅ كود الخصم في النموذج
     paymentMethod: '',
     depositAmount: ''
   });
@@ -130,14 +159,47 @@ const CartPage = () => {
     return state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   }, [state.cart]);
 
-  // حساب الديبوزت (فقط للدفع عند الاستلام)
   const deposit = formData.paymentMethod === 'cash' 
     ? Math.max(parseInt(formData.depositAmount) || 0, 0)
     : 0;
 
-  // الإجمالي = المنتجات + الشحن - الديبوزت (الديبوزت يتخصم)
-  const finalTotal = Math.max(cartTotal + shippingPrice - deposit, 0);
+  // ✅ حساب الخصم من رمز الخصم المدخل
+  const calculateDiscount = useCallback(() => {
+    if (!formData.discountCode.trim()) return 0;
+    const result = validateDiscountCode(formData.discountCode);
+    return result.isValid ? result.amount : 0;
+  }, [formData.discountCode]);
+
+  // ✅ إعادة حساب الخصم كلما تغير كود الخصم
+  const currentDiscount = useMemo(() => {
+    return calculateDiscount();
+  }, [calculateDiscount]);
+
+  const finalTotal = shippingPrice !== null 
+    ? Math.max(cartTotal + shippingPrice - currentDiscount - deposit, 0)
+    : Math.max(cartTotal - currentDiscount - deposit, 0);
+  
   const remainingAfterDeposit = Math.max(finalTotal, 0);
+
+  // ✅ دالة التحقق من كود الخصم عند الكتابة
+  const handleDiscountCodeChange = useCallback((code) => {
+    setFormData({...formData, discountCode: code.toUpperCase()});
+    
+    if (!code.trim()) {
+      setDiscountError('');
+      setDiscountSuccess('');
+      return;
+    }
+
+    const validation = validateDiscountCode(code);
+    if (validation.isValid) {
+      setDiscountSuccess(validation.message);
+      setDiscountError('');
+    } else {
+      setDiscountError(validation.message);
+      setDiscountSuccess('');
+    }
+  }, [formData]);
 
   const updateCartQuantity = useCallback((id, quantity) => {
     const validatedQuantity = validateQuantity(quantity);
@@ -167,9 +229,16 @@ const CartPage = () => {
     setFormData({...formData, governorate: governorateId});
     setGovernorateOpen(false);
     
-    // حساب سعر الشحن الجديد
     const newPrice = getShippingPrice(governorateId);
     setShippingPrice(newPrice);
+
+    dispatch({
+      type: 'ADD_NOTIFICATION',
+      payload: {
+        message: `✅ تم تحديد سعر الشحن: ${newPrice} جنيه`,
+        type: 'success'
+      }
+    });
   };
 
   const validateForm = useCallback(() => {
@@ -187,7 +256,6 @@ const CartPage = () => {
       newErrors.phone = 'رقم الهاتف غير صحيح (مثال: 01012345678)';
     }
 
-    // التحقق من رقم الهاتف الثاني (اختياري لكن يجب أن يكون صحيح إن وجد)
     if (formData.phoneAlt?.trim() && !validatePhone(formData.phoneAlt)) {
       newErrors.phoneAlt = 'رقم الهاتف الثاني غير صحيح';
     }
@@ -200,13 +268,15 @@ const CartPage = () => {
       newErrors.paymentMethod = 'يرجى اختيار طريقة الدفع';
     }
 
-    // التحقق من الديبوزت
     if (formData.paymentMethod === 'cash') {
       const depositAmount = parseInt(formData.depositAmount) || 0;
       if (!formData.depositAmount || depositAmount < MIN_DEPOSIT) {
         newErrors.depositAmount = `الحد الأدنى للديبوزت ${MIN_DEPOSIT} جنيه`;
       }
-      if (depositAmount > (cartTotal + shippingPrice)) {
+      const totalWithShipping = shippingPrice !== null 
+        ? cartTotal + shippingPrice 
+        : cartTotal;
+      if (depositAmount > totalWithShipping) {
         newErrors.depositAmount = 'الديبوزت لا يمكن أن يزيد عن الإجمالي';
       }
     }
@@ -250,7 +320,6 @@ const CartPage = () => {
       
       const paymentMethodData = PAYMENT_METHODS[formData.paymentMethod];
 
-      // رسالة مبسطة ومنظمة
       let message = `📦 *طلب جديد - ${SITE_CONFIG.name}*\n\n`;
       
       message += `👤 *البيانات*\n`;
@@ -267,13 +336,18 @@ const CartPage = () => {
       
       message += `\n💰 *الإجمالي*\n`;
       message += `المنتجات: ${cartTotal} ج\n`;
-      message += `الشحن: ${shippingPrice} ج\n`;
+      if (shippingPrice !== null) {
+        message += `الشحن: ${shippingPrice} ج\n`;
+      }
+      // ✅ إضافة الخصم المحسوب
+      if (currentDiscount > 0) {
+        message += `🎁 الخصم (${formData.discountCode}): -${currentDiscount} ج\n`;
+      }
       if (deposit > 0) {
         message += `الديبوزت: -${deposit} ج\n`;
       }
-      message += `*الإجمالي: ${cartTotal + shippingPrice} ج*\n\n`;
+      message += `*الإجمالي: ${finalTotal} ج*\n\n`;
 
-      // طريقة الدفع
       if (formData.paymentMethod === 'vodafone') {
         message += `💳 *فودافون كاش*\n`;
         message += `الرقم: ${paymentMethodData.number}\n`;
@@ -298,7 +372,6 @@ const CartPage = () => {
       const encodedMessage = encodeURIComponent(message);
       const whatsappUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodedMessage}`;
       
-      // تحذير للدفع الإلكتروني
       if (formData.paymentMethod === 'vodafone' || formData.paymentMethod === 'instapay') {
         dispatch({
           type: 'ADD_NOTIFICATION',
@@ -309,7 +382,6 @@ const CartPage = () => {
         });
       }
 
-      // تحذير للديبوزت
       if (formData.paymentMethod === 'cash' && deposit > 0) {
         dispatch({
           type: 'ADD_NOTIFICATION',
@@ -320,7 +392,6 @@ const CartPage = () => {
         });
       }
       
-      // فتح واتساب
       const newWindow = window.open(whatsappUrl, '_blank');
       
       if (!newWindow || newWindow.closed) {
@@ -339,7 +410,6 @@ const CartPage = () => {
 
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // حفظ بيانات الطلب
       dispatch({
         type: 'SET_LAST_ORDER',
         payload: {
@@ -349,7 +419,9 @@ const CartPage = () => {
           items: [...state.cart],
           total: finalTotal,
           cartSubtotal: cartTotal,
-          shippingPrice: shippingPrice,
+          shippingPrice: shippingPrice || 0,
+          discountAmount: currentDiscount,
+          discountCode: formData.discountCode,
           deposit: deposit,
           customerName: fullName,
           customerPhone: phone,
@@ -358,7 +430,6 @@ const CartPage = () => {
         }
       });
       
-      // مسح السلة
       dispatch({ type: 'CLEAR_CART' });
       
       dispatch({
@@ -374,10 +445,15 @@ const CartPage = () => {
         governorate: '', 
         address: '', 
         notes: '', 
+        discountCode: '',
         paymentMethod: '',
         depositAmount: ''
       });
       setLastSubmit(Date.now());
+      setDiscountCode('');
+      setDiscountError('');
+      setDiscountSuccess('');
+      setShippingPrice(null);
       
       setTimeout(() => {
         navigateTo('order-success');
@@ -392,7 +468,7 @@ const CartPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, finalTotal, shippingPrice, deposit, remainingAfterDeposit, navigateTo]);
+  }, [formData, state, dispatch, validateForm, lastSubmit, cartTotal, finalTotal, shippingPrice, deposit, remainingAfterDeposit, currentDiscount, navigateTo]);
 
   if (state.cart.length === 0) {
     return (
@@ -515,13 +591,36 @@ const CartPage = () => {
                     <span className="text-gray-600 text-sm">المنتجات:</span>
                     <span className="font-bold text-lg text-gray-800">{cartTotal} ج</span>
                   </div>
-                  <div className="flex justify-between pt-3 border-t">
-                    <span className="text-gray-600 text-sm">الشحن:</span>
-                    <span className="font-bold text-lg text-orange-600">{shippingPrice} ج</span>
-                  </div>
+                  
+                  {shippingPrice !== null ? (
+                    <div className="flex justify-between pt-3 border-t">
+                      <span className="text-gray-600 text-sm">الشحن:</span>
+                      <span className="font-bold text-lg text-orange-600">{shippingPrice} ج</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg mt-2">
+                      <AlertCircle size={14} className="text-yellow-600 flex-shrink-0" />
+                      <span className="text-xs text-yellow-700 font-bold">اختر محافظة لحساب الشحن</span>
+                    </div>
+                  )}
+                  
+                  {currentDiscount > 0 && (
+                    <div className="flex justify-between pt-3 border-t bg-green-50 p-2 rounded-lg">
+                      <span className="text-green-700 text-sm font-bold flex items-center gap-1">
+                        <Gift size={16} />
+                        الخصم:
+                      </span>
+                      <span className="font-bold text-lg text-green-600">-{currentDiscount} ج</span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between pt-3 border-t-2 border-gray-300">
                     <span className="text-gray-800 font-bold">الإجمالي:</span>
-                    <span className="font-bold text-xl text-green-600">{cartTotal + shippingPrice} ج</span>
+                    <span className="font-bold text-xl text-green-600">
+                      {shippingPrice !== null 
+                        ? cartTotal + shippingPrice - currentDiscount 
+                        : cartTotal - currentDiscount} ج
+                    </span>
                   </div>
                 </div>
 
@@ -637,10 +736,31 @@ const CartPage = () => {
                   />
                 </div>
 
+                {/* ✅ كود الخصم تحت الملاحظات */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">🎁 كود الخصم</label>
+                  <input
+                    type="text"
+                    placeholder="أدخل كود الخصم إن وجد..."
+                    value={formData.discountCode}
+                    onChange={(e) => handleDiscountCodeChange(e.target.value)}
+                    maxLength={20}
+                    className={`w-full p-2 border-2 rounded-lg text-sm ${
+                      discountError ? 'border-red-500 bg-red-50' : 
+                      discountSuccess ? 'border-green-500 bg-green-50' : 
+                      'border-gray-200'
+                    }`}
+                  />
+                  {discountError && <p className="text-red-600 text-xs mt-1 font-bold">{discountError}</p>}
+                  {discountSuccess && <p className="text-green-600 text-xs mt-1 font-bold">{discountSuccess}</p>}
+                  {currentDiscount > 0 && (
+                    <p className="text-xs text-green-700 font-bold mt-1">✅ الخصم المطبق: {currentDiscount} جنيه</p>
+                  )}
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-2">طريقة الدفع *</label>
                   <div className="space-y-2">
-                    {/* فودافون كاش */}
                     <div 
                       onClick={() => setFormData({...formData, paymentMethod: 'vodafone'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
@@ -662,7 +782,6 @@ const CartPage = () => {
                       <p className="text-xs text-gray-600 mr-6">الرقم: {PAYMENT_METHODS.vodafone.number}</p>
                     </div>
 
-                    {/* إنستا باي */}
                     <div 
                       onClick={() => setFormData({...formData, paymentMethod: 'instapay'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
@@ -682,7 +801,6 @@ const CartPage = () => {
                         <span className="font-bold text-sm">{PAYMENT_METHODS.instapay.icon} {PAYMENT_METHODS.instapay.name}</span>
                       </div>
                       <p className="text-xs text-gray-600 mr-6">المعرف: {PAYMENT_METHODS.instapay.username}</p>
-                      <p className="text-xs text-blue-600 font-bold mt-2 mr-6">🔗 {PAYMENT_METHODS.instapay.buttonText}</p>
                       <a
                         href={PAYMENT_METHODS.instapay.link}
                         target="_blank"
@@ -693,7 +811,6 @@ const CartPage = () => {
                       </a>
                     </div>
 
-                    {/* الدفع عند الاستلام */}
                     <div 
                       onClick={() => setFormData({...formData, paymentMethod: 'cash'})}
                       className={`p-3 border-2 rounded-xl cursor-pointer transition-all ${
@@ -717,7 +834,6 @@ const CartPage = () => {
                   {errors.paymentMethod && <p className="text-red-500 text-xs mt-1">{errors.paymentMethod}</p>}
                 </div>
 
-                {/* حقل الديبوزت - يظهر فقط عند اختيار الدفع عند الاستلام */}
                 {formData.paymentMethod === 'cash' && (
                   <div className="bg-green-50 border-2 border-green-200 rounded-xl p-3 space-y-2">
                     <label className="block text-xs font-bold text-gray-700">
@@ -740,7 +856,6 @@ const CartPage = () => {
                     )}
                     {errors.depositAmount && <p className="text-red-500 text-xs">{errors.depositAmount}</p>}
                     
-                    {/* ملخص الديبوزت والإجمالي */}
                     {formData.depositAmount && (
                       <div className="bg-white border-2 border-green-300 rounded-lg p-2 space-y-1">
                         <div className="flex justify-between text-xs">
@@ -749,18 +864,24 @@ const CartPage = () => {
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">الشحن:</span>
-                          <span className="font-bold text-gray-800">{shippingPrice} ج</span>
+                          <span className="font-bold text-gray-800">{shippingPrice || 0} ج</span>
                         </div>
+                        {currentDiscount > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-gray-600">الخصم:</span>
+                            <span className="font-bold text-green-600">-{currentDiscount} ج</span>
+                          </div>
+                        )}
                         <div className="flex justify-between text-xs border-t pt-1">
-                          <span className="text-green-700 font-bold">الإجمالي قبل الديبوزت:</span>
-                          <span className="font-bold text-green-700">{cartTotal + shippingPrice} ج</span>
+                          <span className="text-green-700 font-bold">الإجمالي:</span>
+                          <span className="font-bold text-green-700">{cartTotal + (shippingPrice || 0) - currentDiscount} ج</span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-orange-700 font-bold">الديبوزت المدفوع:</span>
+                          <span className="text-orange-700 font-bold">الديبوزت:</span>
                           <span className="font-bold text-orange-700">-{deposit} ج</span>
                         </div>
                         <div className="flex justify-between text-sm border-t-2 border-green-400 pt-1">
-                          <span className="text-green-800 font-bold">المتبقي عند الاستلام:</span>
+                          <span className="text-green-800 font-bold">المتبقي:</span>
                           <span className="font-bold text-green-600">{remainingAfterDeposit} ج</span>
                         </div>
                       </div>
@@ -768,7 +889,6 @@ const CartPage = () => {
                   </div>
                 )}
 
-                {/* ملخص بسيط للطرق الأخرى */}
                 {formData.paymentMethod && formData.paymentMethod !== 'cash' && (
                   <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-3 space-y-2">
                     <div className="flex justify-between text-xs">
@@ -777,11 +897,17 @@ const CartPage = () => {
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-600">الشحن:</span>
-                      <span className="font-bold text-gray-800">{shippingPrice} ج</span>
+                      <span className="font-bold text-gray-800">{shippingPrice || 0} ج</span>
                     </div>
+                    {currentDiscount > 0 && (
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-600">الخصم:</span>
+                        <span className="font-bold text-green-600">-{currentDiscount} ج</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm border-t-2 border-gray-400 pt-1">
                       <span className="text-gray-800 font-bold">الإجمالي:</span>
-                      <span className="font-bold text-green-600">{cartTotal + shippingPrice} ج</span>
+                      <span className="font-bold text-green-600">{cartTotal + (shippingPrice || 0) - currentDiscount} ج</span>
                     </div>
                   </div>
                 )}
@@ -821,7 +947,6 @@ const CartPage = () => {
         </div>
       </div>
 
-      {/* Confirm Delete Modal */}
       <ConfirmModal
         isOpen={!!itemToDelete}
         title="حذف المنتج"
