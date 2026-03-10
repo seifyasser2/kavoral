@@ -842,4 +842,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage;gi
+export default CartPage;
