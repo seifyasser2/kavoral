@@ -91,7 +91,7 @@ const productsRawData = [
 
   {
     id: 3,
-    name: 'خلطة التنعيم الطبيعية',
+    name: 'خلطة التنعيم ',
     slug: 'smoothing-oil',
     originalPrice: 220,
     discountPercentage: 32,
@@ -122,7 +122,7 @@ const productsRawData = [
 
   {
     id: 4,
-    name: 'خلطة السبع زيوت المعجزة',
+    name: 'خلطة السبع زيوت ',
     slug: 'seven-oils',
     originalPrice: 230,
     discountPercentage: 30,
@@ -184,7 +184,7 @@ const productsRawData = [
 
   {
     id: 6,
-    name: 'زيت جوز الهند البكر',
+    name: 'زيت جوز الهند ',
     slug: 'coconut-oil',
     originalPrice: 200,
     discountPercentage: 40,
@@ -217,7 +217,7 @@ const productsRawData = [
 
   {
     id: 7,
-    name: 'زيت الأرغان المغربي',
+    name: 'زيت الأرغان ',
     slug: 'argan-oil',
     originalPrice: 300,
     discountPercentage: 40,
@@ -323,7 +323,7 @@ const productsRawData = [
 
   {
     id: 10,
-    name: 'زيت الورد النقي',
+    name: 'زيت الورد ',
     slug: 'rose-oil',
     originalPrice: 280,
     discountPercentage: 39,
@@ -429,7 +429,7 @@ const productsRawData = [
     featured: false,
     description: 'زيت الجرجير الطبيعي المعصور على البارد',
     benefitsSkin: [
-      'شد البشرة ومحاربة التجاعيش (فيتامين A كريتينول نباتي)',
+      'شد البشرة ومحاربة التجاعيد(فيتامين A كريتينول نباتي)',
       'علاج آثار الحبوب والالتهابات (كبريت عضوي + فيتامين C + فيتامينات B)'
     ],
     usageSkin: 'قطرتان على بشرة نظيفة رطبة قبل النوم، دلك برفق، مرتين إلى ثلاث مرات أسبوعياً',
