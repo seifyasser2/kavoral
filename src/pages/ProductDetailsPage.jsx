@@ -9,7 +9,7 @@ const ProductDetailsPage = () => {
   const product = state.selectedProduct;
   const [localQuantity, setLocalQuantity] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [activeTab, setActiveTab] = useState('benefits');
+  const [activeTab, setActiveTab] = useState('skin');
 
   const closeModal = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });
@@ -30,8 +30,7 @@ const ProductDetailsPage = () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
- }, [product, closeModal]);
-
+  }, [product, closeModal]);
 
   const handleAddToCart = useCallback(() => {
     if (localQuantity <= 0) {
@@ -59,6 +58,18 @@ const ProductDetailsPage = () => {
 
   const isInWishlist = state.wishlist.some(item => item.id === product.id);
   const hasDiscount = product.originalPrice > product.price;
+  
+  // تحديد التابات المتاحة بناءً على البيانات
+  const availableTabs = [];
+  if (product.benefitsSkin?.length > 0) availableTabs.push({ key: 'skin', label: 'العناية بالبشرة' });
+  if (product.benefitsHair?.length > 0) availableTabs.push({ key: 'hair', label: 'العناية بالشعر' });
+  if (product.warnings?.length > 0) availableTabs.push({ key: 'warnings', label: 'تحذيرات' });
+
+  // إذا لم يكن هناك تابات، اعرض الأول
+  if (availableTabs.length > 0 && !availableTabs.find(t => t.key === activeTab)) {
+    const initialTab = availableTabs[0].key;
+    setActiveTab(initialTab);
+  }
 
   return (
     <div 
@@ -250,59 +261,81 @@ const ProductDetailsPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="border-t pt-4 sm:pt-6">
-            <div className="flex gap-2 mb-4 overflow-x-auto">
-              {[
-                { key: 'benefits', label: 'الفوائد' },
-                { key: 'usage', label: 'الاستخدام' },
-                { key: 'warnings', label: 'تحذيرات' },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold whitespace-nowrap text-xs sm:text-base ${
-                    activeTab === tab.key
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+          {availableTabs.length > 0 && (
+            <div className="border-t pt-4 sm:pt-6">
+              <div className="flex gap-2 mb-4 overflow-x-auto">
+                {availableTabs.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold whitespace-nowrap text-xs sm:text-base ${
+                      activeTab === tab.key
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-            <div>
-              {activeTab === 'benefits' && product.benefits && (
-                <div className="space-y-2">
-                  {product.benefits.map((benefit, index) => (
-                    <div key={index} className="flex items-start gap-2 sm:gap-3 bg-green-50 border border-green-100 rounded-lg p-2 sm:p-3">
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-white text-xs">✓</span>
+              <div>
+                {/* البشرة */}
+                {activeTab === 'skin' && product.benefitsSkin?.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="bg-green-50 border border-green-100 rounded-lg p-3 sm:p-4 mb-3">
+                      <p className="text-xs sm:text-sm text-green-900 font-bold mb-2">طريقة الاستخدام:</p>
+                      <p className="text-xs sm:text-sm text-green-800">{product.usageSkin}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-700 font-bold mb-2">الفوائد:</p>
+                      {product.benefitsSkin.map((benefit, index) => (
+                        <div key={index} className="flex items-start gap-2 sm:gap-3 bg-green-50 border border-green-100 rounded-lg p-2 sm:p-3 mb-2">
+                          <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <span className="text-gray-700 text-xs sm:text-sm leading-relaxed">{benefit}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* الشعر */}
+                {activeTab === 'hair' && product.benefitsHair?.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4 mb-3">
+                      <p className="text-xs sm:text-sm text-blue-900 font-bold mb-2">طريقة الاستخدام:</p>
+                      <p className="text-xs sm:text-sm text-blue-800">{product.usageHair}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs sm:text-sm text-gray-700 font-bold mb-2">الفوائد:</p>
+                      {product.benefitsHair.map((benefit, index) => (
+                        <div key={index} className="flex items-start gap-2 sm:gap-3 bg-blue-50 border border-blue-100 rounded-lg p-2 sm:p-3 mb-2">
+                          <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-xs">✓</span>
+                          </div>
+                          <span className="text-gray-700 text-xs sm:text-sm leading-relaxed">{benefit}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* التحذيرات */}
+                {activeTab === 'warnings' && product.warnings?.length > 0 && (
+                  <div className="space-y-2">
+                    {product.warnings.map((warning, index) => (
+                      <div key={index} className="flex items-start gap-2 sm:gap-3 bg-yellow-50 border border-yellow-100 rounded-lg p-2 sm:p-3">
+                        <AlertCircle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-yellow-900 text-xs sm:text-sm">{warning}</span>
                       </div>
-                      <span className="text-gray-700 text-xs sm:text-base leading-relaxed">{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {activeTab === 'usage' && product.howToUse && (
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 sm:p-4">
-                  <p className="text-blue-900 leading-relaxed text-xs sm:text-base">{product.howToUse}</p>
-                </div>
-              )}
-
-              {activeTab === 'warnings' && product.warnings && (
-                <div className="space-y-2">
-                  {product.warnings.map((warning, index) => (
-                    <div key={index} className="flex items-start gap-2 sm:gap-3 bg-yellow-50 border border-yellow-100 rounded-lg p-2 sm:p-3">
-                      <AlertCircle size={16} className="text-yellow-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-yellow-900 text-xs sm:text-base">{warning}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
