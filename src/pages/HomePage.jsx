@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { getWhatsAppLink } from '../data/config';
+
 const HomePage = () => {
   const { navigateTo } = useAppContext();
 
@@ -63,11 +64,8 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ✅ SEO: Add semantic HTML5 tags */}
-      
       {/* Hero Section */}
       <section className="relative min-h-[85vh] flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 text-white overflow-hidden" aria-label="Hero Banner">
-        {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
             backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
@@ -77,13 +75,11 @@ const HomePage = () => {
 
         <div className="container mx-auto px-4 relative z-10 py-12">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold mb-6">
               <Leaf size={16} aria-hidden="true" />
               <span>طبيعي 100% معصور على البارد</span>
             </div>
 
-            {/* ✅ SEO: Main Heading with keywords */}
             <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
               الطبيعة في خدمة
               <span className="block mt-2">جمالك وصحتك</span>
@@ -93,26 +89,39 @@ const HomePage = () => {
               اكتشف مجموعة كافورال المميزة من الزيوت الطبيعية النقية
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {/* CTA Buttons - تم إضافة الزرار هنا في البداية */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <button 
                 onClick={() => navigateTo('products')}
-                className="bg-white text-green-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                className="bg-white text-green-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
                 aria-label="تصفح منتجات كافورال"
               >
                 <span>تصفح المنتجات</span>
                 <ArrowLeft size={20} aria-hidden="true" />
               </button>
+              
               <button 
                 onClick={() => navigateTo('offers')}
-                className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition-all"
+                className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition-all w-full sm:w-auto"
                 aria-label="عروض كافورال الحصرية"
               >
                 العروض الحصرية
               </button>
+
+              <a
+                href="https://www.facebook.com/share/g/17UdrYnPgU/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-blue-700 transition-all inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+                aria-label="آراء عملاء كافورال على فيسبوك"
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+                آراء العملاء
+              </a>
             </div>
 
-            {/* Trust Badges */}
             <div className="flex flex-wrap gap-3 justify-center mt-8">
               <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
                 <CheckCircle size={16} aria-hidden="true" />
@@ -126,7 +135,6 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Wave Bottom */}
         <div className="absolute bottom-0 left-0 right-0" aria-hidden="true">
           <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-16">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="white"></path>
@@ -178,7 +186,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Trust Badges */}
+      {/* Trust Badges Section */}
       <section className="py-12 bg-white" aria-label="شارات الثقة">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
@@ -198,7 +206,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Testimonials Section */}
       <section className="py-16 bg-gray-50" aria-labelledby="testimonials-heading">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -226,7 +234,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* Final CTA Section */}
       <section className="py-16 bg-green-500 text-white" aria-labelledby="cta-heading">
         <div className="container mx-auto px-4 text-center">
           <h2 id="cta-heading" className="text-3xl md:text-4xl font-bold mb-4">
@@ -236,10 +244,10 @@ const HomePage = () => {
             انضم إلى آلاف العملاء الراضين واختبر الفرق الحقيقي
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button
               onClick={() => navigateTo('products')}
-              className="bg-white text-green-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all"
+              className="bg-white text-green-600 px-8 py-4 rounded-xl font-bold hover:bg-gray-50 transition-all w-full sm:w-auto"
               aria-label="اكتشف منتجات كافورال"
             >
               اكتشف المنتجات
@@ -248,11 +256,13 @@ const HomePage = () => {
               href={getWhatsAppLink('مرحباً، أريد الاستفسار')}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition-all inline-block"
+              className="bg-white/10 backdrop-blur-sm border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white/20 transition-all inline-block w-full sm:w-auto text-center"
               aria-label="تواصل مع كافورال عبر واتساب"
             >
               تواصل معنا
             </a>
+            
+       
           </div>
         </div>
       </section>

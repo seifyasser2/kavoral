@@ -42,10 +42,10 @@ const Header = () => {
     }
   }, [isSearchOpen]);
 
-  const navigation = [
+  const navigation = [git
     { key: 'home', label: 'الرئيسية', icon: Home },
     { key: 'products', label: 'المنتجات', icon: Tag },
-    { key: 'offers', label: 'العروض', icon: Gift },
+    { key: 'offers', label: 'الكورسات', icon: Gift },
     { key: 'about', label: 'من نحن', icon: User },
     { key: 'contact', label: 'تواصل', icon: Phone }
   ];
