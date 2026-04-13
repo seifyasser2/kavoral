@@ -25,10 +25,13 @@ const SHIPPING_PRICES = {
 // ✅ أكواس الخصم البسيطة
 const DISCOUNT_CODES = {
   'SAVE155': 155,
+  'SAVE150': 150,
+  'SAVE145': 145,
   'SAVE140': 140,
   'WELCOME30': 30,
   'SUMMER75': 75,
   'FLASH60': 60,
+  'FLASH50': 50,
   'SPECIAL40': 40,
   'GIFT20': 20,
   'CODE15': 15,
