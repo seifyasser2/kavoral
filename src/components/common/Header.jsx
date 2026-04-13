@@ -42,7 +42,7 @@ const Header = () => {
     }
   }, [isSearchOpen]);
 
-  const navigation = [git
+  const navigation = [
     { key: 'home', label: 'الرئيسية', icon: Home },
     { key: 'products', label: 'المنتجات', icon: Tag },
     { key: 'offers', label: 'الكورسات', icon: Gift },
