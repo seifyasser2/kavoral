@@ -12,7 +12,7 @@ const BottomNav = () => {
   const navItems = [
     { key: 'home', icon: Home, label: 'الرئيسية' },
     { key: 'products', icon: ShoppingBag, label: 'المنتجات' },
-    { key: 'offers', icon: Gift, label: 'العروض' },
+    { key: 'offers', icon: Gift, label: 'الكورسات' },
     { key: 'wishlist', icon: Heart, label: 'المفضلة', count: wishlistCount },
     { key: 'contact', icon: Phone, label: 'تواصل' }
   ];

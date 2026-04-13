@@ -9,7 +9,7 @@ const Footer = () => {
   const quickLinks = [
     { key: 'home', label: 'الرئيسية' },
     { key: 'products', label: 'المنتجات' },
-    { key: 'offers', label: 'العروض' },
+    { key: 'offers', label: 'الكورسات' },
     { key: 'about', label: 'من نحن' },
     { key: 'contact', label: 'تواصل معنا' }
   ];

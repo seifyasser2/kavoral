@@ -405,7 +405,7 @@ const productsRawData = [
       'تفتيح البشرة',
       'مضاد للبكتيريا'
     ],
-    usageSkin: '10-15 قطرة سعد + 30 قطرة لوز حلو أو جوجوبا، مساج 5 دقائق، أول 3 أيام مرتين يومياً ثم مرة قبل النوم، أسبوع بعد كل إزالة شعر',
+    usageSkin: '10-15 قطرة سعد + 30 قطرة لوز حلو أو جوجوبا, مساج 5 دقائق، أول 3 أيام مرتين يومياً ثم مرة قبل النوم، أسبوع بعد كل إزالة شعر',
     benefitsHair: [],
     usageHair: 'لا ينطبق',
     warnings: ['للاستخدام الخارجي فقط', 'منتج متخصص لتقليل نمو الشعر'],
@@ -507,11 +507,49 @@ const productsRawData = [
     rating: 4.8,
     reviews: 278,
     soldCount: 640
+  },
+
+  {
+    id: 16,
+    name: 'المختوم الفلسطيني الأصلي',
+    slug: 'palestinian-makhtoum',
+    originalPrice: 450,
+    discountPercentage: 15.55, // ليصبح السعر النهائي 380 تقريباً
+    size: '500g', 
+    image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1776099847/WhatsApp_Image_2026-04-13_at_6.59.25_PM_nqu9jt.jpg',
+    imageAlt: '🍯',
+    categories: ['nutrition', 'weight-gain'],
+    tags: ['زيادة الوزن', 'فتح الشهية', 'مغذي طبيعي', 'طاقة'],
+    inStock: true,
+    featured: true,
+    description: 'المختوم الفلسطيني الأصلي: الحل الطبيعي والأمثل لزيادة الوزن بطريقة صحية وفتح الشهية.',
+    
+    // الخانات الجديدة بناءً على طلبك
+    ingredients: [
+      'لوز', 'بندق', 'كاجو', 'عين جمل', 
+      'تين مجفف', 'زيت زيتون', 'بلح', 
+      'سمسم', 'حبة البركة'
+    ],
+    benefits: [
+      'زيادة الوزن بشكل ملحوظ وصحي وبناء الكتلة العضلية',
+      'فتح الشهية ومعالجة حالات النحافة المستعصية',
+      'إمداد الجسم بسعرات حرارية عالية القيمة الغذائية',
+      'مصدر ممتاز للطاقة البدنية والذهنية',
+      'تقوية المناعة لاحتوائه على حبة البركة والسمسم والمكسرات'
+    ],
+    info: 'المختوم الفلسطيني هو خلطة طبيعية 100% تجمع بين أجود أنواع المكسرات والثمار المجففة والزيوت الطبيعية، مصمم خصيصاً لمن يبحث عن زيادة الوزن بطريقة آمنة تماماً بعيداً عن الكيماويات.',
+    
+    // الاستخدام
+    usage: 'يؤكل مباشرة: 3 ملاعق كبيرة يومياً موزعة على مدار اليوم (ملعقة بعد كل وجبة أساسية).',
+    warnings: ['يحتوي على مكسرات', 'لا ينصح به لمرضى السكري'],
+    rating: 4.98,
+    reviews: 210,
+    soldCount: 580
   }
 ];
 
 // ============================================
-// حساب الأسعار تلقائياً
+// حساب الأسعار تلقائياً وتجهيز المصفوفة النهائية
 // ============================================
 export const PRODUCTS_DATA = productsRawData
   .map(product => {
@@ -555,7 +593,7 @@ export const PRODUCTS_DATA = productsRawData
   .filter(Boolean);
 
 // ============================================
-// الدوال المساعدة
+// الدوال المساعدة للبحث والتصفية
 // ============================================
 export const getProductById = (id) => {
   return PRODUCTS_DATA.find(p => p.id === id) || null;
@@ -579,17 +617,6 @@ export const searchProducts = (searchTerm) => {
     product.description.toLowerCase().includes(term) ||
     product.tags.some(tag => tag.toLowerCase().includes(term))
   );
-};
-
-export const filterByPriceRange = (products, minPrice, maxPrice) => {
-  return products.filter(p => p.price >= minPrice && p.price <= maxPrice);
-};
-
-export const validateProduct = (product) => {
-  if (!product) return false;
-  if (!product.id || !product.name || product.price === undefined) return false;
-  if (product.price < 0 || product.originalPrice < 0) return false;
-  return true;
 };
 
 export default PRODUCTS_DATA;
