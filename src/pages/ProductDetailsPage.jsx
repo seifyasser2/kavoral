@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   X, Star, Plus, Minus, Heart, ShoppingCart, Package, AlertCircle, 
-  CheckCircle2, Info, Leaf 
+  CheckCircle2, Info, Leaf, Sparkles, Beaker, ShieldCheck
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 const ProductDetailsPage = () => {
   const { state, dispatch, toggleWishlist, navigateTo } = useAppContext();
   const product = state.selectedProduct;
-  const [localQuantity, setLocalQuantity] = useState(0);
+  const [localQuantity, setLocalQuantity] = useState(1);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('');
 
+  // إغلاق الصفحة
   const closeModal = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_PRODUCT', payload: null });
     navigateTo('products');
   }, [dispatch, navigateTo]);
   
+  // التحكم في لوحة المفاتيح والتمرير
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') closeModal();
@@ -33,16 +35,18 @@ const ProductDetailsPage = () => {
     };
   }, [product, closeModal]);
 
+  // تحديد التاب الافتراضي بناءً على البيانات المتوفرة
   useEffect(() => {
     if (product) {
-      if (product.info) setActiveTab('info');
-      else if (product.benefitsSkin?.length > 0) setActiveTab('skin');
+      if (product.benefitsSkin?.length > 0) setActiveTab('skin');
       else if (product.benefitsHair?.length > 0) setActiveTab('hair');
+      else if (product.info) setActiveTab('info');
       else if (product.ingredients?.length > 0) setActiveTab('ingredients');
       else if (product.benefits?.length > 0) setActiveTab('benefits');
     }
   }, [product]);
 
+  // إضافة للسلة
   const handleAddToCart = useCallback(() => {
     if (localQuantity <= 0) {
       dispatch({
@@ -59,247 +63,315 @@ const ProductDetailsPage = () => {
       type: 'ADD_NOTIFICATION',
       payload: { message: `✅ تم إضافة ${localQuantity} من ${product.name}`, type: 'success' }
     });
-    setLocalQuantity(0);
+    setLocalQuantity(1);
   }, [localQuantity, product, dispatch]);
+
+  // حساب التابات المتاحة ديناميكياً
+  const availableTabs = useMemo(() => {
+    if (!product) return [];
+    const tabs = [];
+    if (product.benefitsSkin?.length > 0) tabs.push({ key: 'skin', label: 'للبشرة', icon: <Sparkles size={16} /> });
+    if (product.benefitsHair?.length > 0) tabs.push({ key: 'hair', label: 'للشعر', icon: <Leaf size={16} /> });
+    if (product.info) tabs.push({ key: 'info', label: 'عن المنتج', icon: <Info size={16} /> });
+    if (product.ingredients?.length > 0) tabs.push({ key: 'ingredients', label: 'المكونات', icon: <Beaker size={16} /> });
+    if (product.benefits?.length > 0) tabs.push({ key: 'benefits', label: 'الفوائد', icon: <CheckCircle2 size={16} /> });
+    if (product.warnings?.length > 0) tabs.push({ key: 'warnings', label: 'تنبيهات', icon: <AlertCircle size={16} /> });
+    return tabs;
+  }, [product]);
 
   if (!product) return null;
 
   const isInWishlist = state.wishlist.some(item => item.id === product.id);
   const hasDiscount = product.originalPrice > product.price;
-  
-  const availableTabs = [];
-  if (product.benefitsSkin?.length > 0) availableTabs.push({ key: 'skin', label: 'العناية بالبشرة' });
-  if (product.benefitsHair?.length > 0) availableTabs.push({ key: 'hair', label: 'العناية بالشعر' });
-  if (product.info) availableTabs.push({ key: 'info', label: 'عن المنتج' });
-  if (product.ingredients?.length > 0) availableTabs.push({ key: 'ingredients', label: 'المكونات' });
-  if (product.benefits?.length > 0) availableTabs.push({ key: 'benefits', label: 'الفوائد الصحية' });
-  if (product.warnings?.length > 0) availableTabs.push({ key: 'warnings', label: 'تحذيرات' });
 
   return (
     <div 
-      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
     >
       <div 
-        className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[92vh] overflow-y-auto my-auto scrollbar-thin"
+        className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto my-auto scrollbar-thin"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* زر الإغلاق المحسن للموبايل */}
+        {/* زر الإغلاق العائم */}
         <button
           onClick={closeModal}
-          className="sticky top-2 left-2 z-50 w-10 h-10 bg-white/90 backdrop-blur shadow-lg border border-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:text-red-600 transition-colors active:scale-90 mb-[-40px]"
+          className="absolute top-6 left-6 z-50 w-12 h-12 bg-white/90 backdrop-blur shadow-xl border border-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:rotate-90 transition-all duration-300 active:scale-90"
         >
           <X size={24} />
         </button>
 
-        <div className="p-4 sm:p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-            {/* قسم الصورة */}
+        <div className="p-5 sm:p-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+            
+            {/* القسم الأيسر: الصورة */}
             <div className="relative group">
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 shadow-inner">
+              <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-2xl">
                 {!imageLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                    <div className="w-8 h-8 border-4 border-green-100 border-t-green-600 rounded-full animate-spin"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-green-100 border-t-green-600 rounded-full animate-spin"></div>
                   </div>
                 )}
                 <img 
                   src={product.image} 
                   alt={product.name}
                   onLoad={() => setImageLoaded(true)}
-                  className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
                 />
-                <div className="absolute top-3 right-3 flex flex-col gap-2">
-                  {hasDiscount && (
-                    <span className="bg-red-600 text-white text-[10px] sm:text-xs font-black px-3 py-1.5 rounded-full shadow-lg">
-                      خصم {product.totalDiscountPercentage}%
+                
+                {hasDiscount && (
+                  <div className="absolute top-6 right-6">
+                    <span className="bg-red-500 text-white text-xs font-black px-4 py-2 rounded-2xl shadow-lg animate-pulse">
+                      وفر {product.discountPercentage}%
                     </span>
-                  )}
+                  </div>
+                )}
+
+                <div className="absolute bottom-6 inset-x-6 flex justify-center">
+                  <div className="bg-white/80 backdrop-blur-md px-6 py-2 rounded-2xl border border-white/50 shadow-lg">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <ShieldCheck size={18} />
+                      <span className="text-sm font-bold">منتج طبيعي 100%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* قسم السعر والشراء */}
-            <div className="flex flex-col justify-center space-y-5">
+            {/* القسم الأيمن: التفاصيل الأساسية */}
+            <div className="flex flex-col justify-start space-y-8 pt-4">
               <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-gray-800 leading-tight mb-2">{product.name}</h2>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-lg border border-green-100">
-                  <Package size={16} />
-                  <span className="text-sm font-bold">{product.size}</span>
+                <div className="flex items-center gap-2 mb-3">
+                  {product.categories?.map((cat, i) => (
+                    <span key={i} className="text-[10px] uppercase tracking-widest font-black text-green-600 bg-green-50 px-3 py-1 rounded-md">
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight mb-4">{product.name}</h1>
+                <div className="flex items-center gap-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-600 rounded-xl">
+                    <Package size={18} />
+                    <span className="text-sm font-bold">{product.size}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-orange-400">
+                    <Star size={18} fill="currentColor" />
+                    <span className="font-bold text-gray-800">{product.rating || '4.9'}</span>
+                    <span className="text-gray-400 text-sm">({product.reviews || '120'} تقييم)</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-5 bg-gradient-to-br from-green-50 to-white rounded-2xl border border-green-100 relative overflow-hidden">
+              <div className="p-6 bg-gradient-to-br from-green-600 to-green-700 rounded-[2rem] text-white shadow-xl shadow-green-100 relative overflow-hidden group">
+                <div className="absolute top-[-20%] right-[-10%] w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
                 <div className="relative z-10">
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-4xl font-black text-green-600">{product.price} <small className="text-lg">ج.م</small></span>
+                  <p className="text-green-100 text-sm font-bold mb-1">السعر الحالي</p>
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-5xl font-black">{product.price} <small className="text-xl">ج.م</small></span>
                     {hasDiscount && (
-                      <span className="text-lg text-gray-400 line-through font-bold">{product.originalPrice} ج</span>
+                      <span className="text-xl text-green-200/60 line-through font-bold">{product.originalPrice} ج</span>
                     )}
                   </div>
-                  {hasDiscount && (
-                    <p className="text-green-700 text-sm font-bold mt-2 flex items-center gap-1">
-                      <span>🥳</span> وفرت {product.savings} جنيه اليوم!
-                    </p>
-                  )}
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
-                  <span className="font-bold text-gray-700">الكمية:</span>
-                  <div className="flex items-center gap-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-[1.5rem] border border-gray-100">
+                  <span className="font-bold text-gray-700 ml-4">حدد الكمية:</span>
+                  <div className="flex items-center gap-6 bg-white px-4 py-2 rounded-2xl shadow-sm border border-gray-100">
                     <button 
-                      onClick={() => setLocalQuantity(Math.max(0, localQuantity - 1))}
-                      className="w-10 h-10 rounded-full bg-white border shadow-sm flex items-center justify-center text-red-500 hover:bg-red-50 active:scale-90 transition-all"
+                      onClick={() => setLocalQuantity(Math.max(1, localQuantity - 1))}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
                     >
-                      <Minus size={18} />
+                      <Minus size={20} />
                     </button>
-                    <span className="text-2xl font-black text-gray-800 w-6 text-center">{localQuantity}</span>
+                    <span className="text-2xl font-black text-gray-800 min-w-[20px] text-center">{localQuantity}</span>
                     <button 
                       onClick={() => setLocalQuantity(localQuantity + 1)}
-                      className="w-10 h-10 rounded-full bg-white border shadow-sm flex items-center justify-center text-green-600 hover:bg-green-50 active:scale-90 transition-all"
+                      className="text-gray-400 hover:text-green-600 transition-colors"
                     >
-                      <Plus size={18} />
+                      <Plus size={20} />
                     </button>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
                     onClick={() => toggleWishlist(product)}
-                    className={`p-4 rounded-xl border-2 transition-all active:scale-95 ${
-                      isInWishlist ? 'bg-red-50 border-red-500 text-red-500 shadow-sm' : 'bg-white border-gray-200 text-gray-400'
+                    className={`p-5 rounded-2xl border-2 transition-all duration-300 ${
+                      isInWishlist 
+                        ? 'bg-red-50 border-red-500 text-red-500 shadow-inner' 
+                        : 'bg-white border-gray-100 text-gray-300 hover:border-red-200 hover:text-red-300'
                     }`}
                   >
-                    <Heart size={24} fill={isInWishlist ? 'currentColor' : 'none'} />
+                    <Heart size={28} fill={isInWishlist ? 'currentColor' : 'none'} />
                   </button>
                   
                   <button
                     onClick={handleAddToCart}
-                    disabled={localQuantity <= 0 || !product.inStock}
-                    className={`flex-1 flex items-center justify-center gap-3 rounded-xl font-black text-lg transition-all active:scale-[0.98] ${
-                      localQuantity <= 0 || !product.inStock
+                    disabled={!product.inStock}
+                    className={`flex-1 flex items-center justify-center gap-3 rounded-2xl font-black text-xl transition-all duration-300 active:scale-95 shadow-lg ${
+                      !product.inStock
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-green-500 text-white hover:bg-green-600 shadow-lg shadow-green-100'
+                        : 'bg-gray-900 text-white hover:bg-black shadow-gray-200'
                     }`}
                   >
-                    <ShoppingCart size={22} />
-                    {!product.inStock ? 'نفذت الكمية' : 'أضف للسلة'}
+                    <ShoppingCart size={24} />
+                    {!product.inStock ? 'نفذت الكمية' : 'أضف للسلة الآن'}
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* نظام التابات المطور - حل مشكلة الموبايل */}
+          {/* نظام التبويبات المطور */}
           {availableTabs.length > 0 && (
-            <div className="mt-8">
-              <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+            <div className="mt-16 border-t border-gray-100 pt-10">
+              {/* قائمة التبويبات */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-4 no-scrollbar -mx-5 px-5 sm:mx-0 sm:px-0 justify-start sm:justify-center">
                 {availableTabs.map(tab => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all flex-shrink-0 ${
+                    className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm whitespace-nowrap transition-all duration-300 ${
                       activeTab === tab.key
-                        ? 'bg-green-600 text-white shadow-md scale-105'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                        ? 'bg-green-600 text-white shadow-xl shadow-green-100 translate-y-[-2px]'
+                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                     }`}
                   >
+                    {tab.icon}
                     {tab.label}
                   </button>
                 ))}
               </div>
 
-              <div className="mt-4 min-h-[200px] animate-fadeIn">
-                {activeTab === 'info' && (
-                  <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                    <div className="flex items-center gap-2 mb-3 text-blue-800">
-                      <Info size={20} />
-                      <h3 className="font-black text-base">حول المنتج</h3>
-                    </div>
-                    <p className="text-gray-700 leading-relaxed text-sm sm:text-base break-words font-medium">{product.info}</p>
-                    {product.usage && (
-                      <div className="mt-4 p-4 bg-white/80 rounded-xl border border-blue-100 shadow-sm">
-                        <span className="block text-xs font-black text-blue-900 mb-2 uppercase tracking-wider">طريقة الاستخدام المثالية:</span>
-                        <p className="text-blue-800 text-sm leading-relaxed">{product.usage}</p>
+              {/* محتوى التبويبات */}
+              <div className="mt-8 min-h-[300px]">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  
+                  {/* تاب البشرة */}
+                  {activeTab === 'skin' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-black text-gray-800 flex items-center gap-2 mb-4">
+                          <Sparkles className="text-emerald-500" /> فوائد للبشرة
+                        </h3>
+                        {product.benefitsSkin?.map((b, i) => (
+                          <div key={i} className="flex items-start gap-4 p-4 bg-emerald-50/50 rounded-2xl border border-emerald-100/50">
+                            <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <CheckCircle2 size={14} className="text-white" />
+                            </div>
+                            <span className="text-gray-700 font-bold leading-relaxed">{b}</span>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                )}
+                      <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                        <h4 className="font-black text-gray-900 mb-4 flex items-center gap-2">
+                          <Beaker className="text-blue-500" /> طريقة الاستخدام للبشرة
+                        </h4>
+                        <p className="text-gray-600 leading-loose font-medium italic">
+                          "{product.usageSkin}"
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                {activeTab === 'ingredients' && (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-3">
-                    {product.ingredients?.map((item, i) => (
-                      <div key={i} className="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
-                           <Leaf size={16} className="text-green-500" />
+                  {/* تاب الشعر */}
+                  {activeTab === 'hair' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-black text-gray-800 flex items-center gap-2 mb-4">
+                          <Leaf className="text-blue-500" /> العناية بالشعر
+                        </h3>
+                        {product.benefitsHair?.map((b, i) => (
+                          <div key={i} className="flex items-start gap-4 p-4 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                            <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <CheckCircle2 size={14} className="text-white" />
+                            </div>
+                            <span className="text-gray-700 font-bold leading-relaxed">{b}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="bg-blue-900 rounded-[2rem] p-8 text-white shadow-xl">
+                        <h4 className="font-black mb-4 flex items-center gap-2 text-blue-200">
+                          <Star size={18} /> سر الكثافة والقوة
+                        </h4>
+                        <p className="text-blue-50 leading-loose font-medium">
+                          {product.usageHair}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* تاب المكونات */}
+                  {activeTab === 'ingredients' && (
+                    <div className="bg-gray-50 rounded-[2.5rem] p-8 sm:p-12">
+                      <h3 className="text-2xl font-black text-gray-800 text-center mb-10">المكونات الطبيعية</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {product.ingredients?.map((item, i) => (
+                          <div key={i} className="flex items-center gap-4 bg-white p-5 rounded-[1.5rem] border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
+                              <Leaf size={24} />
+                            </div>
+                            <span className="font-black text-gray-700">{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* تاب عن المنتج */}
+                  {activeTab === 'info' && (
+                    <div className="max-w-3xl mx-auto text-center space-y-6">
+                      <div className="inline-flex p-4 bg-blue-50 rounded-full text-blue-600 mb-4">
+                        <Info size={32} />
+                      </div>
+                      <h3 className="text-2xl font-black text-gray-800">تفاصيل إضافية</h3>
+                      <p className="text-gray-600 text-lg leading-relaxed font-medium">
+                        {product.info}
+                      </p>
+                      {product.usage && (
+                        <div className="mt-8 p-6 bg-yellow-50 rounded-2xl border border-yellow-100 text-yellow-900 inline-block text-right">
+                          <span className="font-black block mb-2 underline">نصيحة ذهبية:</span>
+                          <p className="font-bold">{product.usage}</p>
                         </div>
-                        <span className="font-bold text-gray-700 text-xs sm:text-sm break-words">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeTab === 'benefits' && (
-                  <div className="grid grid-cols-1 gap-3">
-                    {product.benefits?.map((benefit, i) => (
-                      <div key={i} className="flex items-start gap-3 bg-green-50/40 p-4 rounded-xl border border-green-100/50">
-                        <CheckCircle2 size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-green-900 font-bold text-sm leading-relaxed break-words">{benefit}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* تابات الزيوت */}
-                {activeTab === 'skin' && (
-                  <div className="space-y-4">
-                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 shadow-sm">
-                      <h4 className="font-black text-emerald-900 mb-2 text-sm italic flex items-center gap-2">
-                        <Star size={16} /> سر الجمال للبشرة:
-                      </h4>
-                      <p className="text-emerald-800 text-sm leading-relaxed">{product.usageSkin}</p>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      {product.benefitsSkin?.map((b, i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 bg-white border-b border-gray-50 last:border-0">
-                          <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
-                          <span className="text-gray-700 font-bold text-sm">{b}</span>
+                  )}
+
+                  {/* تاب الفوائد العامة */}
+                  {activeTab === 'benefits' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {product.benefits?.map((benefit, i) => (
+                        <div key={i} className="flex items-center gap-4 bg-green-50/50 p-6 rounded-2xl border border-green-100/50">
+                          <CheckCircle2 size={24} className="text-green-600 flex-shrink-0" />
+                          <p className="text-green-900 font-bold">{benefit}</p>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {activeTab === 'hair' && (
-                  <div className="space-y-4">
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-sm">
-                      <h4 className="font-black text-blue-900 mb-2 text-sm italic flex items-center gap-2">
-                        <Star size={16} /> سر القوة للشعر:
-                      </h4>
-                      <p className="text-blue-800 text-sm leading-relaxed">{product.usageHair}</p>
-                    </div>
-                    <div className="space-y-2">
-                      {product.benefitsHair?.map((b, i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 bg-white border-b border-gray-50 last:border-0">
-                          <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-                          <span className="text-gray-700 font-bold text-sm">{b}</span>
+                  {/* تاب التحذيرات */}
+                  {activeTab === 'warnings' && (
+                    <div className="max-w-2xl mx-auto">
+                      <div className="bg-red-50 rounded-[2rem] p-8 border border-red-100">
+                        <div className="flex items-center gap-3 text-red-600 mb-6 justify-center">
+                          <AlertCircle size={32} />
+                          <h3 className="text-xl font-black">تعليمات السلامة</h3>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'warnings' && (
-                  <div className="space-y-3">
-                    {product.warnings?.map((w, i) => (
-                      <div key={i} className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 text-red-800">
-                        <AlertCircle size={22} className="flex-shrink-0" />
-                        <span className="font-black text-sm break-words">{w}</span>
+                        <div className="space-y-4">
+                          {product.warnings?.map((w, i) => (
+                            <div key={i} className="flex items-center gap-3 text-red-800 bg-white/50 p-4 rounded-xl">
+                              <div className="w-2 h-2 rounded-full bg-red-400"></div>
+                              <span className="font-bold">{w}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  )}
+
+                </div>
               </div>
             </div>
           )}
