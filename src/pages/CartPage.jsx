@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, ChevronDown, Gift, X, AlertCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Send, Truck, Package, Clock, ChevronDown, Gift, X, AlertCircle, Copy, Check } from 'lucide-react';
 
 import { useAppContext } from '../context/AppContext';
 import { SITE_CONFIG } from '../data/config';
@@ -146,6 +146,7 @@ const CartPage = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountError, setDiscountError] = useState('');
   const [discountSuccess, setDiscountSuccess] = useState('');
+  const [copiedVodafone, setCopiedVodafone] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -203,6 +204,17 @@ const CartPage = () => {
       setDiscountSuccess('');
     }
   }, [formData]);
+
+  // ✅ دالة نسخ رقم فودافون
+  const copyVodafoneNumber = useCallback(() => {
+    const vodafoneNumber = PAYMENT_METHODS.vodafone.number;
+    navigator.clipboard.writeText(vodafoneNumber).then(() => {
+      setCopiedVodafone(true);
+      setTimeout(() => setCopiedVodafone(false), 2000);
+    }).catch(() => {
+      console.error('Failed to copy');
+    });
+  }, []);
 
   const updateCartQuantity = useCallback((id, quantity) => {
     const validatedQuantity = validateQuantity(quantity);
@@ -772,7 +784,7 @@ const CartPage = () => {
                           : 'border-gray-200 hover:border-red-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                           formData.paymentMethod === 'vodafone' ? 'border-red-500' : 'border-gray-300'
                         }`}>
@@ -782,7 +794,34 @@ const CartPage = () => {
                         </div>
                         <span className="font-bold text-sm">{PAYMENT_METHODS.vodafone.icon} {PAYMENT_METHODS.vodafone.name}</span>
                       </div>
-                      <p className="text-xs text-gray-600 mr-6">الرقم: {PAYMENT_METHODS.vodafone.number}</p>
+                      <p className="text-xs text-gray-600 mr-6 mb-2">الرقم: {PAYMENT_METHODS.vodafone.number}</p>
+                      
+                      {/* ✅ إضافة زر نسخ رقم فودافون */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyVodafoneNumber();
+                        }}
+                        className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 font-bold mr-6 hover:bg-red-100 px-2 py-1 rounded transition-all"
+                      >
+                        {copiedVodafone ? (
+                          <>
+                            <Check size={14} />
+                            تم النسخ
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} />
+                            انسخ الرقم
+                          </>
+                        )}
+                      </button>
+                      
+                      {/* ✅ التوضيح عند اختيار فودافون */}
+                      <div className="text-xs text-blue-600 font-bold mr-6 mt-2 bg-blue-50 p-2 rounded">
+                        💡 دفع المبلغ كامل
+                      </div>
                     </div>
 
                     <div 
@@ -793,7 +832,7 @@ const CartPage = () => {
                           : 'border-gray-200 hover:border-blue-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                           formData.paymentMethod === 'instapay' ? 'border-blue-500' : 'border-gray-300'
                         }`}>
@@ -803,12 +842,18 @@ const CartPage = () => {
                         </div>
                         <span className="font-bold text-sm">{PAYMENT_METHODS.instapay.icon} {PAYMENT_METHODS.instapay.name}</span>
                       </div>
-                      <p className="text-xs text-gray-600 mr-6">المعرف: {PAYMENT_METHODS.instapay.username}</p>
+                      <p className="text-xs text-gray-600 mr-6 mb-2">المعرف: {PAYMENT_METHODS.instapay.username}</p>
+                      
+                      {/* ✅ التوضيح عند اختيار إنستا باي */}
+                      <div className="text-xs text-blue-600 font-bold mr-6 mb-2 bg-blue-50 p-2 rounded">
+                        💡 دفع المبلغ كامل
+                      </div>
+                      
                       <a
                         href={PAYMENT_METHODS.instapay.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:text-blue-800 font-bold mt-1 mr-6 inline-block hover:underline"
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold mr-6 inline-block hover:underline"
                       >
                         اضغط هنا لفتح الرابط →
                       </a>
@@ -822,7 +867,7 @@ const CartPage = () => {
                           : 'border-gray-200 hover:border-green-300'
                       }`}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                           formData.paymentMethod === 'cash' ? 'border-green-500' : 'border-gray-300'
                         }`}>
@@ -831,6 +876,11 @@ const CartPage = () => {
                           )}
                         </div>
                         <span className="font-bold text-sm">{PAYMENT_METHODS.cash.icon} {PAYMENT_METHODS.cash.name}</span>
+                      </div>
+                      
+                      {/* ✅ التوضيح عند اختيار الدفع عند الاستلام */}
+                      <div className="text-xs text-green-600 font-bold mr-6 mt-1 bg-green-50 p-2 rounded">
+                        💡 دفع ديبوزت + الباقي عند الاستلام
                       </div>
                     </div>
                   </div>
