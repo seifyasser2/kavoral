@@ -62,15 +62,15 @@ const bundlesRawData = [
   {
     id: "weight-gain-course-cafural",
     name: "كورس زيادة الوزن (4 قطع شامل الهدايا) 🎁",
-    description: "توفير 250 جنيهاً | الكورس المتكامل: المختوم + الخلطة السحرية + (هدية) خلطة التنعيم + (هدية) زيت جوز الهند.",
-    image: "https://res.cloudinary.com/dl9rygqx6/image/upload/v1776795467/WhatsApp_Image_2026-04-21_at_8.11.10_PM_dkljyi.jpg",
+    description: "توفير 250 جنيهاً | الكورس المتكامل: المختوم + الخلطة السحرية + (هدية) خلطة التنعيم + (هدية)خلطه السبع زيوت .",
+    image: "https://res.cloudinary.com/dl9rygqx6/image/upload/v1777411286/WhatsApp_Image_2026-04-28_at_11.55.09_PM_gpamhj.jpg",
     imageAlt: "🥣",
     products: [101, 102, 103, 104], 
     productNames: [
       "المختوم الفلسطيني الأصلي (نصف كيلو)",
       "الخلطة السحرية للتسمين (نصف كيلو)",
       "🎁 عبوة خلطة التنعيم (مجاناً)",
-      "🎁 عبوة زيت جوز الهند (مجاناً)"
+      "🎁 عبوة خلطه السبع زيوت (مجاناً)"
     ],
     discountPercentage: 22.7, 
     category: "nutrition",
