@@ -17,7 +17,8 @@ const MIN_DEPOSIT = 50;
 const SHIPPING_PRICES = {
   65: ['cairo', 'giza', 'qalioubia'],
   75: ['sharqia', 'kafr_elsheikh', 'suez', 'port_said', 'beheira', 'damietta', 'dakahlia', 'gharbia', 'monufia', 'alexandria'],
-  90: ['assiut', 'minya', 'fayoum', 'beni_suef', 'ismailia'],
+  85: ['suez', 'port_said','ismailia'],
+  90: ['assiut', 'minya', 'fayoum', 'beni_suef',],
   115: ['sohag', 'qena', 'luxor', 'aswan'],
   125: ['north_sinai', 'south_sinai', 'matrouh', 'red_sea', 'new_valley']
 };
