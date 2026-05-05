@@ -16,7 +16,7 @@ const MIN_DEPOSIT = 50;
 // جدول أسعار الشحن حسب المحافظة
 const SHIPPING_PRICES = {
   65: ['cairo', 'giza', 'qalioubia'],
-  75: ['sharqia', 'kafr_elsheikh', 'suez', 'port_said', 'beheira', 'damietta', 'dakahlia', 'gharbia', 'monufia', 'alexandria'],
+  75: ['sharqia', 'kafr_elsheikh',  'beheira', 'damietta', 'dakahlia', 'gharbia', 'monufia', 'alexandria'],
   85: ['suez', 'port_said','ismailia'],
   90: ['assiut', 'minya', 'fayoum', 'beni_suef',],
   115: ['sohag', 'qena', 'luxor', 'aswan'],
