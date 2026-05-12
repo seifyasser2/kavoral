@@ -558,7 +558,7 @@ const productsRawData = [
     soldCount: 640
   },
 
-  {
+{
   id: 16,
   name: 'المختوم الفلسطيني الأصلي',
   slug: 'palestinian-makhtoum',
@@ -567,7 +567,8 @@ const productsRawData = [
   size: '500g', 
   image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1776099847/WhatsApp_Image_2026-04-13_at_6.59.25_PM_nqu9jt.jpg',
   imageAlt: '🍯',
-  categories: ['blends', 'nutrition', 'weight-gain'], // فئة الخلطات
+  // تعديل الترتيب هنا يجعل القسم الأساسي "other" بدلاً من "blends"
+  categories: ['other', 'nutrition', 'weight-gain'], 
   tags: ['زيادة الوزن', 'فتح الشهية', 'مغذي طبيعي', 'طاقة'],
   inStock: true,
   featured: true,
@@ -595,6 +596,38 @@ const productsRawData = [
   reviews: 210,
   soldCount: 580
 },
+{
+    id: 17,
+    name: 'زيت أُنثى',
+    slug: 'ontha-oil',
+    originalPrice: 305,
+    discountPercentage: 39.34,
+    size: BOTTLE_SIZES.medium,
+    image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1778611468/WhatsApp_Image_2026-05-12_at_9.32.14_PM_xxrgfz.jpg',
+    imageAlt: '✨',
+    categories: ['blends', 'skin'],
+    tags: ['تأخير نمو الشعر', 'تفتيح البشرة', 'نعومة أُنثوية', 'ترطيب'],
+    inStock: true,
+    featured: true,
+    description: 'تركيبة متطورة تجمع بين زيت السعد والترمس المر لتأخير نمو الشعر وتفتيح البشرة بعمق.',
+    
+    // البشرة - الفوائد الكاملة
+    benefitsSkin: [
+      'تأخير نمو الشعر الزائد وتقليل كثافته تدريجيًا بفضل زيت السعد والترمس',
+      'تفتيح المناطق الداكنة والأكواع والركب وتوحيد لون البشرة',
+      'تهدئة البشرة وتقليل الاحمرار والتهيج بعد عملية إزالة الشعر',
+      'ترطيب وتنعيم البشرة بعمق وتقليل مظهر "جلد الوزة" والخشونة',
+      'منح البشرة إشراقة طبيعية وملمس ناعم كالحرير'
+    ],
+    usageSkin: 'بعد إزالة الشعر: يُغسل الجلد بماء فاتر ويُجفف جيدًا، ثم يُوضع الزيت مع التدليك لمدة 5 دقائق | أول 3 أيام: يُستخدم مرتين يوميًا (صباحًا ومساءً) | من اليوم الرابع للسابع: يُستخدم مرة واحدة قبل النوم | يُكرر الروتين بعد كل عملية إزالة شعر للحصول على أفضل نتيجة.',
+    
+    benefitsHair: [],
+    usageHair: 'غير مخصص للشعر',
+    warnings: ['للاستخدام الخارجي فقط', 'يُفضل عمل اختبار حساسية على جزء صغير من الجلد'],
+    rating: 4.9,
+    reviews: 0,
+    soldCount: 0
+  },
 ];
 
 // ============================================
