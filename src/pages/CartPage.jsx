@@ -790,42 +790,43 @@ const CartPage = () => {
       const notes = sanitizeText(formData.notes);
       const pm = PAYMENT_METHODS[formData.paymentMethod];
 
-      // بناء قائمة المنتجات بشكل مختصر
-      const itemsList = state.cart
-        .map(item => `• ${item.name}${item.quantity > 1 ? ` ×${item.quantity}` : ''} — ${item.price * item.quantity} ج`)
-        .join('\n');
+      let msg = `🌿 *طلب جديد من كافورال*\n`;
+      msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+      msg += `👤 *بيانات العميل*\n`;
+      msg += `الاسم: ${fullName}\n`;
+      msg += `الهاتف: ${phone}\n`;
+      if (phoneAlt !== '-') msg += `هاتف آخر: ${phoneAlt}\n`;
+      msg += `المحافظة: ${govName}\n`;
+      msg += `العنوان: ${address}\n`;
+      if (notes) msg += `ملاحظات: ${notes}\n`;
+      msg += `\n🛒 *المنتجات*\n`;
+      state.cart.forEach(item => {
+        msg += `• ${item.name} × ${item.quantity} = ${item.price * item.quantity} ج\n`;
+      });
+      msg += `\n💰 *الحساب*\n`;
+      msg += `المنتجات: ${cartTotal} ج\n`;
+      if (shippingPrice !== null) msg += `الشحن: ${shippingPrice} ج\n`;
+      if (currentDiscount > 0) msg += `خصم (${formData.discountCode}): -${currentDiscount} ج\n`;
+      if (deposit > 0) msg += `ديبوزت مقدم: -${deposit} ج\n`;
+      msg += `*الإجمالي المطلوب: ${finalTotal} ج*\n\n`;
 
-      // بناء سطر الحساب
-      const priceLine = [
-        `${cartTotal} ج منتجات`,
-        shippingPrice ? `+ ${shippingPrice} ج شحن` : null,
-        currentDiscount > 0 ? `- ${currentDiscount} ج خصم` : null,
-      ].filter(Boolean).join(' | ');
-
-      // سطر الدفع
-      const paymentLine = {
-        vodafone: `فودافون كاش — ${PAYMENT_METHODS.vodafone.number} ⚠️ أرسل الإيصال`,
-        instapay: `إنستا باي — @${PAYMENT_METHODS.instapay.username} ⚠️ أرسل الإيصال`,
-        cash: deposit > 0
-          ? `كاش عند الاستلام | ديبوزت: ${deposit} ج | متبقي: ${finalTotal} ج ⚠️ أرسل إيصال الديبوزت`
-          : `كاش عند الاستلام`,
-      }[formData.paymentMethod];
-
-      const msg = [
-        `🌿 *طلب جديد — كافورال*`,
-        ``,
-        `👤 ${fullName} | 📞 ${phone}${phoneAlt !== '-' ? ` / ${phoneAlt}` : ''}`,
-        `📍 ${govName} — ${address}`,
-        notes ? `📝 ${notes}` : null,
-        ``,
-        `🛒 *المنتجات:*`,
-        itemsList,
-        ``,
-        `💰 ${priceLine}`,
-        `✅ *الإجمالي: ${finalTotal} ج*`,
-        ``,
-        `💳 ${paymentLine}`,
-      ].filter(line => line !== null).join('\n');
+      if (formData.paymentMethod === 'vodafone') {
+        msg += `💳 *طريقة الدفع: فودافون كاش*\n`;
+        msg += `الرقم: ${PAYMENT_METHODS.vodafone.number}\n`;
+        msg += `⚠️ أرسل صورة إيصال التحويل بعد الدفع\n`;
+      } else if (formData.paymentMethod === 'instapay') {
+        msg += `💳 *طريقة الدفع: إنستا باي*\n`;
+        msg += `المعرف: ${PAYMENT_METHODS.instapay.username}\n`;
+        msg += `⚠️ أرسل صورة إيصال التحويل بعد الدفع\n`;
+      } else if (formData.paymentMethod === 'cash') {
+        msg += `💵 *طريقة الدفع: الدفع عند الاستلام*\n`;
+        if (deposit > 0) {
+          msg += `الديبوزت المقدم: ${deposit} ج\n`;
+          msg += `المتبقي عند الاستلام: ${finalTotal} ج\n`;
+          msg += `⚠️ أرسل إيصال الديبوزت على الواتساب\n`;
+        }
+      }
+      msg += `\n━━━━━━━━━━━━━━━━━━━━`;
 
       const waUrl = `https://wa.me/${SITE_CONFIG.contact.whatsapp}?text=${encodeURIComponent(msg)}`;
 
