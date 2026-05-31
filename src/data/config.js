@@ -28,15 +28,13 @@ export const SITE_CONFIG = {
   
   // إعدادات الشحن - ✅ تحديث: الشحن المجاني فوق 1000
   shipping: {
-    freeShippingThreshold: 1000, // تم التحديث
-    standardShipping: 60, // سعر الشحن العادي (للمرجع فقط، لا يستخدم في الواتساب)
-    estimatedDelivery: "24-48 ساعة", // مدة التوصيل المتوقعة
+    estimatedDelivery: "من 3 ل 7 ايام", // مدة التوصيل المتوقعة
     deliveryAreas: "جميع محافظات مصر"
   },
   
   // معلومات الشركة
   company: {
-    foundedYear: 2024,
+    foundedYear: 2025,
     yearsOfExperience: 1,
     customersCount: 5000,
     productsCount: 15,
