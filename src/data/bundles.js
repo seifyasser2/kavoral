@@ -10,8 +10,8 @@ export const GLOBAL_BUNDLE_DISCOUNT = 35;
 // ============================================
 
 const bundlesRawData = [
-// =========================================================================
-  // 2. كورس زيادة الوزن من كافورال (Weight Gain Course) - (المحدث والمفصل)
+  // =========================================================================
+  // 1. كورس زيادة الوزن من كافورال (Weight Gain Course)
   // =========================================================================
   {
     id: "weight-gain-course-cafural",
@@ -33,7 +33,6 @@ const bundlesRawData = [
     reviews: 310,
     soldCount: 950,
     
-    // المكونات التفصيلية
     ingredients: {
       magicMix: [
         "شوفان", "لبن بودر", "كاكاو", "فول سوداني", "سمسم", "بذور الشيا"
@@ -79,6 +78,72 @@ const bundlesRawData = [
     scientificBasis: "يعتمد الكورس على مبدأ 'الفائض الغذائي' بتوفير سعرات حرارية عالية القيمة من مصادر طبيعية 100% غنية بالبروتينات والدهون الصحية والأعشاب المحفزة للنمو.",
   },
 
+  // =========================================================================
+  // 2. كورس النحافة الشديدة من كافورال
+  // =========================================================================
+  {
+    id: "severe-thinness-course-cafural",
+    name: "كورس النحافة الشديدة من كافورال 🔥",
+    description: "توفير 650 جنيهاً | 4 عبوات خلطة سحرية + 2 عبوة مختوم فلسطيني أصلي للنحافة الشديدة.",
+    image: "https://res.cloudinary.com/dl9rygqx6/image/upload/v1781207249/WhatsApp_Image_2026-06-11_at_6.05.17_PM_eidleo.jpg",
+    imageAlt: "🔥",
+    products: [102, 102, 102, 102, 101, 101],
+    productNames: [
+      "الخلطة السحرية للتسمين - عبوة 1",
+      "الخلطة السحرية للتسمين - عبوة 2",
+      "الخلطة السحرية للتسمين - عبوة 3",
+      "الخلطة السحرية للتسمين - عبوة 4",
+      "المختوم الفلسطيني الأصلي - عبوة 1",
+      "المختوم الفلسطيني الأصلي - عبوة 2",
+    ],
+    discountPercentage: 32.5,
+    category: "nutrition",
+    featured: true,
+    ratings: 4.97,
+    reviews: 180,
+    soldCount: 420,
+
+    ingredients: {
+      magicMix: [
+        "شوفان", "لبن بودرة", "كاكاو", "فول سوداني", "سمسم", "بذور الشيا"
+      ],
+      makhtoum: [
+        "لوز", "بندق", "كاجو", "عين جمل", "سوداني مقشر",
+        "تمر رطب سكري", "تمر الوادي",
+        "سمسم", "عسل موالح", "عسل برسيم", "عسل سدر جبلي",
+        "زيت زيتون بكر", "حبوب لقاح بلدي", "حبة البركة",
+        "بذور اليقطين"
+      ]
+    },
+
+    benefits: [
+      "يساعد على زيادة الوزن في حالات النحافة الشديدة.",
+      "يساهم في فتح الشهية بشكل طبيعي.",
+      "إمداد الجسم بطاقة وسعرات عالية القيمة الغذائية.",
+      "تحسين الحالة الغذائية العامة.",
+      "دعم بناء الكتلة العضلية بشكل صحي.",
+      "نتائج تظهر تدريجيًا مع الالتزام.",
+    ],
+
+    combinedUsage: `
+*طريقة الاستخدام اليومية:*
+
+1. **الصبح على الريق:** ملعقة كبيرة من المختوم الفلسطيني.
+
+2. **المشروب اليومي:**
+   - 5 معالق كبار من الخلطة السحرية.
+   - ملعقة كبيرة من المختوم.
+   - 200 مل لبن كامل الدسم + موزة.
+   - عسل للتحلية حسب الرغبة.
+
+*نصيحة كافورال:* الاستخدام المنتظم مع الأكل يساعد على زيادة ملحوظة.
+    `,
+    usage: "ملعقة مختوم صباحاً + المشروب اليومي مرة واحدة. الالتزام هو السر.",
+    suitableFor: "النحافة الشديدة وصعوبة زيادة الوزن.",
+    season: "مناسب طول السنة",
+    expectedResults: "زيادة تصل إلى حوالي 2 كيلو أسبوعيًا حسب طبيعة الجسم والالتزام.",
+    scientificBasis: "يعتمد الكورس على مبدأ الفائض الغذائي بتوفير سعرات حرارية عالية من مصادر طبيعية 100%.",
+  },
 ];
 
 // حساب الأسعار تلقائياً
@@ -86,6 +151,8 @@ export const BUNDLE_OFFERS = bundlesRawData.map((bundle) => {
   let originalPrice;
   if (bundle.id === "weight-gain-course-cafural") {
     originalPrice = 1100;
+  } else if (bundle.id === "severe-thinness-course-cafural") {
+    originalPrice = 2000;
   } else {
     originalPrice = bundle.products.reduce((total, productId) => {
       const product = getProductById(productId);
@@ -101,9 +168,10 @@ export const BUNDLE_OFFERS = bundlesRawData.map((bundle) => {
   const totalDiscount = Math.min(Math.max(bundleDiscount, 0), 100);
   let bundlePrice = Math.round(originalPrice * (1 - totalDiscount / 100));
   
-  // تثبيت سعر كورس زيادة الوزن يدوياً لضمان الدقة
   if (bundle.id === "weight-gain-course-cafural") {
     bundlePrice = 850;
+  } else if (bundle.id === "severe-thinness-course-cafural") {
+    bundlePrice = 1350;
   }
 
   const savings = Math.round(originalPrice - bundlePrice);
@@ -136,7 +204,8 @@ export const getBundlesByCategory = (category) => {
 
 export const validateBundleProducts = (bundle) => {
   if (!bundle || !bundle.products) return false;
-  if (bundle.id === "weight-gain-course-cafural") return true; 
+  if (bundle.id === "weight-gain-course-cafural") return true;
+  if (bundle.id === "severe-thinness-course-cafural") return true;
 
   const validProducts = bundle.products
     .map((id) => getProductById(id))
