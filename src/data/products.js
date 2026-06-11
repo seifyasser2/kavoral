@@ -563,7 +563,7 @@ const productsRawData = [
   name: 'المختوم الفلسطيني الأصلي',
   slug: 'palestinian-makhtoum',
   originalPrice: 550,
-  discountPercentage: 30.9,
+  discountPercentage: 25.45,
   size: '500g', 
   image: 'https://res.cloudinary.com/dl9rygqx6/image/upload/v1776099847/WhatsApp_Image_2026-04-13_at_6.59.25_PM_nqu9jt.jpg',
   imageAlt: '🍯',
