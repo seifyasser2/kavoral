@@ -19,7 +19,7 @@ const MAX_ADDRESS_LENGTH = 500;
 const SUBMIT_RATE_LIMIT = 5000;
 const MAX_QUANTITY_PER_ITEM = 100;
 const MIN_QUANTITY = 1;
-const MIN_DEPOSIT = 50;
+const MIN_DEPOSIT = 0;
 
 const SHIPPING_PRICES = {
   65: ['cairo', 'giza', 'qalioubia'],

@@ -52,6 +52,28 @@
     <meta name="twitter:site" content="@kavoral_eg" />
     
     <!-- ✅ Structured Data / JSON-LD Schema -->
+    <!-- 🔧 Schema 0: Founder/Owner Person -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Seif Yasser",
+      "name_ar": "سيف ياسر",
+      "description": "Founder and Owner of Kavoral - كافورال | مؤسس ومالك كافورال للزيوت الطبيعية",
+      "url": "https://kavoral.vercel.app/",
+      "image": "https://kavoral.vercel.app/logo192.png",
+      "sameAs": [
+        "https://www.facebook.com/share/19dj6ofFqA/"
+      ],
+      "owns": {
+        "@type": "Organization",
+        "name": "Kavoral",
+        "name_ar": "كافورال"
+      }
+    }
+    </script>
+    
+    <!-- 🔧 Schema 1: Organization with Founder/Owner -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -62,6 +84,21 @@
       "logo": "https://kavoral.vercel.app/logo192.png",
       "image": "https://kavoral.vercel.app/og-image.jpg",
       "description": "متجر متخصص في الزيوت الطبيعية المعصورة على البارد بأعلى معايير الجودة. منتجات طبيعية 100% للعناية بالشعر والبشرة.",
+      "founder": {
+        "@type": "Person",
+        "name": "Seif Yasser",
+        "name_ar": "سيف ياسر"
+      },
+      "owner": {
+        "@type": "Person",
+        "name": "Seif Yasser",
+        "name_ar": "سيف ياسر"
+      },
+      "brand": {
+        "@type": "Brand",
+        "name": "Kavoral",
+        "name_ar": "كافورال"
+      },
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+20-10-16993805",
@@ -70,7 +107,7 @@
         "availableLanguage": ["ar", "en"]
       },
       "sameAs": [
-        "https://www.facebook.com/Kavoral.eg",
+        "https://www.facebook.com/share/19dj6ofFqA/",
         "https://www.instagram.com/kavoral.eg",
         "https://www.tiktok.com/@kavoral.eg"
       ],
@@ -82,6 +119,7 @@
     }
     </script>
     
+    <!-- 🔧 Schema 2: Store Information -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -91,6 +129,12 @@
       "image": "https://kavoral.vercel.app/logo192.png",
       "priceRange": "$$",
       "telephone": "+20-10-16993805",
+      "owner": {
+        "@type": "Person",
+        "name": "Seif Yasser",
+        "name_ar": "سيف ياسر"
+      },
+      "brand": "Kavoral",
       "address": {
         "@type": "PostalAddress",
         "addressCountry": "EG"
@@ -109,12 +153,17 @@
     }
     </script>
     
+    <!-- 🔧 Schema 3: Website Search Action -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Kavoral | كافورال",
       "url": "https://kavoral.vercel.app/",
+      "creator": {
+        "@type": "Person",
+        "name": "Seif Yasser"
+      },
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://kavoral.vercel.app/products?search={search_term_string}",
@@ -123,25 +172,25 @@
     }
     </script>
     
-    <!-- ✅ Favicons -->
+    <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/apple-touch-icon.png" />
     <link rel="mask-icon" href="%PUBLIC_URL%/safari-pinned-tab.svg" color="#16a34a" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico" />
     
-    <!-- ✅ Manifest -->
+    <!-- Manifest -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
-    <!-- ✅ DNS Prefetch & Preconnect -->
+    <!-- DNS Prefetch & Preconnect -->
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
     
-    <!-- ✅ Preload Critical Resources -->
+    <!-- Preload Critical Resources -->
     <link rel="preload" href="%PUBLIC_URL%/logo192.png" as="image" />
     
-    <!-- ✅ Microsoft Tiles -->
+    <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#16a34a" />
     <meta name="msapplication-TileImage" content="%PUBLIC_URL%/mstile-150x150.png" />
     <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
